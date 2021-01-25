@@ -39,8 +39,11 @@ public:
   void make_grid ();
   void setup_system ();
   void assemble_system ();
+
+  //void multiply(std::vector<double>& x);
   std::vector<double> multiply(std::vector<double> x0);
 
+  
   //void solve ();
   //
   void output_results () const;
@@ -166,6 +169,7 @@ void Step3::assemble_system ()
                                       system_rhs);
 }
 
+//void Step3::multiply(std::vector<double>& x)
 std::vector<double> Step3::multiply(std::vector<double> x0)
 {
   std::vector<double> x(x0.size(),0);
@@ -176,10 +180,10 @@ std::vector<double> Step3::multiply(std::vector<double> x0)
     }
   else
     {
-      std::cout<<"TEST POINT 2 \n";
+      // std::cout<<"TEST POINT 2 \n";
       for(int k=0;k<system_matrix.m();k++)
 	{
-	  std::cout<<"this is the "<<k<<"th iterations \n";
+	  //std::cout<<"this is the "<<k<<"th iterations \n";
 	  SparseMatrix<double>::const_iterator i=system_matrix.begin(k);
 	  
 	  while(i!=system_matrix.end(k))
@@ -190,6 +194,124 @@ std::vector<double> Step3::multiply(std::vector<double> x0)
 	}
       return x;
     }
+}
+
+//void Householder(std::vector<std::vector<double>> *A, std::vector<std::vector<double>> *P)
+//void Householder(std::vector<std::vector<double>> *A, std::vector<std::vector<double>> *P)
+void Householder(std::vector<std::vector<double>> A)
+{
+  int n=A.size();
+  std::cout<<"This is the size of the matrix A"<<n<<" \n";
+  for(int k=0;k<n-2;k++)
+    {
+      //      std::cout<<"Check Point 1!!! \n";
+      double q=0;
+      double alpha=0;
+      // Computing the value of q in the Householder function;
+      for(int i=k+1;i<n;i++)
+	{
+	  q+=A[i][k]*(A[i][k]);
+	}
+
+      // Computing the value of alpha
+      if(A[k+1][k]==0)
+	{
+	  alpha=-sqrt(q);
+	}
+      else
+	{
+	  alpha=-sqrt(q)*A[k+1][k]/abs(A[k+1][k]);
+	  std::cout<<"the abs A[k+1][k] is "<<A[k+1][k]<<std::endl;
+	}
+      
+      double RSQ=alpha*alpha-alpha*A[k+1][k]; // RSQ = 2r^2;
+
+      //std::cout<<"Check Point 2, This is RSQ:::"<<RSQ<<"\n";
+	
+      std::vector<double> v(n-k), u(n-k,0), z(n-k);
+      v[0]=0;
+      v[1]=A[k+1][k]-alpha;
+
+      //std::cout<<"Check Point 3::: "<<v[1]<<" \n";
+      // w=(1/sqrt(2*RSQ)*v=1/2r*v);
+      for(int j=2;j<v.size();j++)
+	{
+	  v[j]=A[j][k];
+	}
+      
+      // std::cout<<"CheckPPPPPoint555 \n";
+      
+      for(int j=0;j<n-k;j++)
+	{
+	  for(int i=1;i<n-k;i++)
+	    {
+	      u[j]+=A[j][i]*v[i];
+	    }
+	  u[j]/=RSQ;
+	}
+
+      //std::cout<<"Check POOOIONIOHIHO\n";
+      
+      double PROD=0;
+      for(int i=1;i<n-k;i++)
+	{
+	  PROD+=v[i]*u[i];
+	}
+
+      //std::cout<<"CheckPoint 4!!!!!!!!!\n";
+      
+      for(int j=0;j<n-k;j++)
+	{
+	  z[j]=u[j]-PROD/(2*RSQ)*v[j];
+	}
+
+      for(int l=k+1;l<n-1;l++)
+	{
+	  for(int j=l+1;j<n;j++)
+	    {
+	      A[j][l]=A[j][l]-v[j-k]*z[j-k]-v[j-k]*z[l-k];
+	      A[l][j]=A[j][l];
+	    }
+	  A[l][l]=A[l][l]-2*v[l-k]*z[l-k];
+	}
+      for(int j=k+2;j<n;j++)
+	{
+	  A[k][j]=0;
+	  A[j][k]=0;
+	}
+
+      A[k+1][k]=A[k+1][k]-v[1]*z[0];
+      A[k][k+1]=A[k+1][k];
+
+      std::cout<<"This is the result of "<<k<<"th iteration \n";
+      std::cout<<"The alpha is "<<alpha<<"\n";
+      std::cout<<"The r is :: "<<sqrt(RSQ/2)<<"\n";
+      for(int i=0;i<A.size();i++)
+	{
+	  for(int j=0; j<A.size();j++)
+	    {
+	      std::cout<<A[i][j]<<" ";
+	    }
+	  std::cout<<"\n";
+	}
+      std::cout<<"The vector of partial w is \n";
+      for (int i=0;i<v.size();i++)
+	{
+	  std::cout<<v[i]/sqrt(2*RSQ)<<" ";
+	}
+      std::cout<<"\n";
+
+      std::cout<<"The vector of u is \n";
+      for (int i=0;i<u.size();i++)
+	{
+	  std::cout<<u[i]<<" ";
+	}
+      std::cout<<"\n";
+      
+    }
+
+
+
 }
 
 
@@ -205,47 +327,56 @@ void Step3::run ()
   //std::cout<<system_matrix.begin()->column()<<"\n";
 
   std::vector<double> x(system_matrix.n(),1);
-  //x=x1;
-  
-  //std::cout<<"Check Point 1 \n";
-
-  //
-  //x=multiply(A, x);
   //
   // Due to the system_matrix is a member of the class step3, but x is not a member of the class,
   // So we can not directly define the multiply function out of the class and using the
   // system_matrix directly.
   // we need to get a variable A equals to the system_matrix but A is not a member of the class;
   
-  //A=system_matrix;
-  
   std::cout << "CheckPoint 1 \n";
-	      
+
+  // multiply(x);
   x=multiply(x);
-  
+  //std::cout<<"This is the value of the vector x"<<x[0]<<std::endl;
   std::ofstream out ("sparse_matrix");
   system_matrix.print(out);
 
-  /*
-  std::ofstream f("somefile.txt");
-  for(vector<double>::const_iterator l = x.begin(); l != x.end(); ++l)
-    {
-      f << *l << '\n';
-    }
-  */
   std::ofstream output_file ("solution");
   for (const auto &e : x) output_file << e << "\n";
   
 }
 
+
+
 int main()
 {
   Step3 laplace_problem;
-  laplace_problem.run ();
+  /////laplace_problem.run ();
 
-  std::stringstream result;
   
+  //std::stringstream result;
+  std::vector<double> b(4,0);
+  std::vector<std::vector<double>> A(4, b);
+  A[0][0]=4;
+  A[0][1]=1;
+  A[0][2]=-2;
+  A[0][3]=2;
+  A[1][0]=1;
+  A[1][1]=2;
+  A[1][2]=0;
+  A[1][3]=1;
+  A[2][0]=-2;
+  A[2][1]=0;
+  A[2][2]=3;
+  A[2][3]=-2;
+  A[3][0]=2;
+  A[3][1]=1;
+  A[3][2]=-2;
+  A[3][3]=-1;
+  Householder(A);
+
+
   std::cout<<"hello world!"<<std::endl;
-  SparseMatrix<double> A;
+  //SparseMatrix<double> A;
   return 0;
 }
