@@ -198,7 +198,10 @@ std::vector<double> Step3::multiply(std::vector<double> x0)
 
 //void Householder(std::vector<std::vector<double>> *A, std::vector<std::vector<double>> *P)
 //void Householder(std::vector<std::vector<double>> *A, std::vector<std::vector<double>> *P)
-void Householder(std::vector<std::vector<double>> A)
+
+// This function computes the householder process of the symmetric definite matrix, it return
+// two matrices. The tridiagonal matrix coordinating with A and the hermitian unitary matrix P.
+void Householder(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> &P)
 {
   int n=A.size();
   std::cout<<"This is the size of the matrix A"<<n<<" \n";
@@ -221,14 +224,14 @@ void Householder(std::vector<std::vector<double>> A)
       else
 	{
 	  alpha=-sqrt(q)*A[k+1][k]/abs(A[k+1][k]);
-	  std::cout<<"the abs A[k+1][k] is "<<A[k+1][k]<<std::endl;
+	  // std::cout<<"the abs A[k+1][k] is "<<A[k+1][k]<<std::endl;
 	}
       
       double RSQ=alpha*alpha-alpha*A[k+1][k]; // RSQ = 2r^2;
 
       //std::cout<<"Check Point 2, This is RSQ:::"<<RSQ<<"\n";
 	
-      std::vector<double> v(n-k), u(n-k,0), z(n-k);
+      std::vector<double> v(n-k,0), u(n-k,0), z(n-k,0);
       v[0]=0;
       v[1]=A[k+1][k]-alpha;
 
@@ -236,7 +239,7 @@ void Householder(std::vector<std::vector<double>> A)
       // w=(1/sqrt(2*RSQ)*v=1/2r*v);
       for(int j=2;j<v.size();j++)
 	{
-	  v[j]=A[j][k];
+	  v[j]=A[k+j][k];
 	}
       
       // std::cout<<"CheckPPPPPoint555 \n";
@@ -245,7 +248,7 @@ void Householder(std::vector<std::vector<double>> A)
 	{
 	  for(int i=1;i<n-k;i++)
 	    {
-	      u[j]+=A[j][i]*v[i];
+	      u[j]+=A[k+j][k+i]*v[i];
 	    }
 	  u[j]/=RSQ;
 	}
@@ -269,11 +272,14 @@ void Householder(std::vector<std::vector<double>> A)
 	{
 	  for(int j=l+1;j<n;j++)
 	    {
-	      A[j][l]=A[j][l]-v[j-k]*z[j-k]-v[j-k]*z[l-k];
+	      A[j][l]=A[j][l]-v[l-k]*z[j-k]-v[j-k]*z[l-k];
 	      A[l][j]=A[j][l];
 	    }
 	  A[l][l]=A[l][l]-2*v[l-k]*z[l-k];
 	}
+      
+      A[n-1][n-1]=A[n-1][n-1]-2*v[n-k-1]*z[n-k-1];
+	
       for(int j=k+2;j<n;j++)
 	{
 	  A[k][j]=0;
@@ -283,9 +289,51 @@ void Householder(std::vector<std::vector<double>> A)
       A[k+1][k]=A[k+1][k]-v[1]*z[0];
       A[k][k+1]=A[k+1][k];
 
-      std::cout<<"This is the result of "<<k<<"th iteration \n";
-      std::cout<<"The alpha is "<<alpha<<"\n";
-      std::cout<<"The r is :: "<<sqrt(RSQ/2)<<"\n";
+
+      for (int j=k+1;j<n;j++)
+	{
+	  std::vector<double> temp(j-k,0);
+	  for(int i=k+1;i<=j;i++)
+	    {
+	      for(int t=k+1;t<n;t++)
+		{
+		  temp[i-k-1]+=v[i-k]*v[t-k]*P[t][j]/(2*RSQ);
+		}
+	    }
+      
+	  //temp=multiply(W,Pj);// to get the jth column of the W*P;
+	  for (int i=k+1;i<=j;i++)
+	    {
+	      P[i][j]-=2*temp[i-k-1];
+	      P[j][i]=P[i][j];
+	    }
+	}
+
+      /*
+      std::cout<<"This is the result of "<<k+1<<"th iteration \n";
+      std::cout<<"\n";
+
+      std::cout<<"The vector of partial w is \n";
+      for (int i=0;i<v.size();i++)
+	{
+	  std::cout<<v[i]/sqrt(2*RSQ)<<" ";
+	}
+      std::cout<<"\n";
+      std::cout<<"\n";
+      
+      for(int i=0;i<P.size();i++)
+	{
+	  for(int j=0; j<P.size();j++)
+	    {
+	      std::cout<<P[i][j]<<" ";
+	    }
+	  std::cout<<"\n";
+	}
+
+      
+      //  std::cout<<"The alpha is "<<alpha<<"\n";
+      //  std::cout<<"The r is :: "<<sqrt(RSQ/2)<<"\n";
+      
       for(int i=0;i<A.size();i++)
 	{
 	  for(int j=0; j<A.size();j++)
@@ -294,12 +342,7 @@ void Householder(std::vector<std::vector<double>> A)
 	    }
 	  std::cout<<"\n";
 	}
-      std::cout<<"The vector of partial w is \n";
-      for (int i=0;i<v.size();i++)
-	{
-	  std::cout<<v[i]/sqrt(2*RSQ)<<" ";
-	}
-      std::cout<<"\n";
+
 
       std::cout<<"The vector of u is \n";
       for (int i=0;i<u.size();i++)
@@ -307,12 +350,11 @@ void Householder(std::vector<std::vector<double>> A)
 	  std::cout<<u[i]<<" ";
 	}
       std::cout<<"\n";
-      
+      */
     }
 
-
-
 }
+
 
 
 void Step3::run ()
@@ -346,6 +388,81 @@ void Step3::run ()
   
 }
 
+///////
+// This function computes the QR factorization of the tridiagonal matrix A.
+// Input: tridiagonal matrix A, identity matrix Q
+// Output: uptriangle matrix A_, the orthonormal matrix Q; A=Q*A_;
+//
+// tips: Maybe I can improve the function by replace the matrix A by two vectors an bn-1;
+// an contains the diagonal entries of A; bn-1 contains the sub-diagonal entries of A;
+
+void QR(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> &Q)
+{
+  int n=A.size();
+
+  // obtain the diagonal and subdiagonal entries of matrix A;
+  std::vector<double>an(n),bn(n-1);
+  for (int i=0;i<A.size()-1;i++)
+    {
+      an[i]=A[i][i];
+      bn[i]=A[i+1][i];
+    }
+  an[n-1]=A[n-1][n-1];
+
+  for (int i=0;i<A.size()-1;i++)
+    {
+      double theta=0;
+      double tempa1=an[i],tempa2=an[i+1],tempb=bn[i];
+      theta=atan(bn[i]/an[i]);
+      double c=cos(theta), s=sin(theta);
+
+      A[i][i]=c*tempa1+s*tempb;
+      A[i][i+1]=c*tempb+s*tempa2;
+      A[i+1][i+1]=-s*tempb+c*tempa2;
+      A[i+1][i]=-s*tempa1+c*tempb;
+
+
+      // update the orthogonal matrix Q by Q_k=Q_k-1*Q;
+      
+      for(int k=0;k<n;k++)
+	{
+	  double tmp1=Q[k][i],tmp2=Q[k][i+1];
+	  Q[k][i]=Q[k][i]*c+Q[k][i+1]*s;
+	  Q[k][i+1]=tmp1*(-s)+tmp2*c;
+	}
+      
+    }
+
+  std::cout<<"This is the result of QR:\n";
+  
+
+  std::cout<<"\n";
+  std::cout<<"\n";
+      
+  for(int i=0;i<A.size();i++)
+    {
+      for(int j=0; j<A.size();j++)
+	{
+	  std::cout<<A[i][j]<<" ";
+	}
+      std::cout<<"\n";
+    }
+  std::cout<<"\n";
+  std::cout<<"\n";
+      
+  for(int i=0;i<Q.size();i++)
+    {
+      for(int j=0; j<Q.size();j++)
+	{
+	  std::cout<<Q[i][j]<<" ";
+	}
+      std::cout<<"\n";
+    }
+
+
+  
+}
+
 
 
 int main()
@@ -356,7 +473,13 @@ int main()
   
   //std::stringstream result;
   std::vector<double> b(4,0);
-  std::vector<std::vector<double>> A(4, b);
+  std::vector<std::vector<double>> A(4, b), P(4,b);
+  P[0][0]=1;
+  P[1][1]=1;
+  P[2][2]=1;
+  P[3][3]=1;
+  std::vector<std::vector<double>> Q(P);
+
   A[0][0]=4;
   A[0][1]=1;
   A[0][2]=-2;
@@ -373,7 +496,22 @@ int main()
   A[3][1]=1;
   A[3][2]=-2;
   A[3][3]=-1;
-  Householder(A);
+  Householder(A,P);
+
+  std::cout<<"The matrix A is :\n";
+  std::cout<<"\n";
+      
+  for(int i=0;i<A.size();i++)
+    {
+      for(int j=0; j<A.size();j++)
+	{
+	  std::cout<<A[i][j]<<" ";
+	}
+      std::cout<<"\n";
+    }
+  std::cout<<"\n";
+
+  QR(A,Q);
 
 
   std::cout<<"hello world!"<<std::endl;
