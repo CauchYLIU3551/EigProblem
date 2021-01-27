@@ -401,6 +401,7 @@ void QR(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> &Q
   int n=A.size();
 
   // obtain the diagonal and subdiagonal entries of matrix A;
+  /*
   std::vector<double>an(n),bn(n-1);
   for (int i=0;i<A.size()-1;i++)
     {
@@ -408,18 +409,24 @@ void QR(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> &Q
       bn[i]=A[i+1][i];
     }
   an[n-1]=A[n-1][n-1];
-
+  */
+  
   for (int i=0;i<A.size()-1;i++)
     {
       double theta=0;
-      double tempa1=an[i],tempa2=an[i+1],tempb=bn[i];
-      theta=atan(bn[i]/an[i]);
+      double tempa1=A[i][i],tempa2=A[i+1][i+1],tempb=A[i+1][i],tempc=A[i][i+1];
+      theta=atan(A[i+1][i]/A[i][i]);
       double c=cos(theta), s=sin(theta);
 
       A[i][i]=c*tempa1+s*tempb;
-      A[i][i+1]=c*tempb+s*tempa2;
-      A[i+1][i+1]=-s*tempb+c*tempa2;
+      A[i][i+1]=c*tempc+s*tempa2;
+      A[i+1][i+1]=-s*tempc+c*tempa2;
       A[i+1][i]=-s*tempa1+c*tempb;
+      if (i<A.size()-2)
+	{
+	  A[i][i+2]=s*A[i+1][i+2];
+	  A[i+1][i+2]=c*A[i+1][i+2];
+	}
 
 
       // update the orthogonal matrix Q by Q_k=Q_k-1*Q;
@@ -459,8 +466,148 @@ void QR(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> &Q
       std::cout<<"\n";
     }
 
+}
 
+// Computing matrix A times vector b, and using the A[0] to store the result and return it.
+std::vector<double> multiply(std::vector<std::vector<double>> A, std::vector<double> b)
+{
+  int m=A.size();
+  int n=b.size();
+  for (int i=0;i<m;i++)
+    {
+      double temp=0;
+      for(int j=0;j<n;j++)
+	{
+	  temp+=A[i][j]*b[j];
+	}
+      A[0][i]=temp;
+      //std::cout<<temp;
+      //std::cout<<"The result of "<<i+1<<"th iteration\n";			
+      
+    }
+
+  return A[0];
+}
+
+// Design for A is square matrix;
+void transpose(std::vector<std::vector<double>> &A)
+{
+  int n=A.size();
+  for(int i=0;i<n;i++)
+    {
+      for(int j=0;j<i;j++)
+	{
+	  double temp=A[j][i];
+	  A[j][i]=A[i][j];
+	  A[i][j]=temp;
+	}
+    }
+}
+
+//This function computes the matrix A times matrix B, and its result will be stored in A.
+// It can be improved if reducing the use of the temp matrix to store the original values which
+// is used in computing.
+void multiply(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> B)
+{
+  std::vector<std::vector<double>> A0(A);
+  // Compute the A*Bi, Bi is the ith column of B, and store it into A[i][:], then transpose A to
+  // get result;
+  for(int i=0;i<A.size();i++)
+    {
+      double temp=0;
+      std::vector<double> tempV;
+      for (int j=0;j<B.size();j++)
+	{
+	  tempV.push_back(B[j][i]);
+	}
+      A[i]=multiply(A0,tempV);
+    }
+  transpose(A);
+}
+
+// this function will turn the matrix Q into the nxn identity matrix;
+void identitymatrix(std::vector<std::vector<double>> &Q, int n)
+{
+  Q.clear();
+  std::vector<double> temp(n,0);
+  for (int i=0;i<n;i++)
+    {
+      Q.push_back(temp);
+      Q[i][i]=1;
+    }
+}
+
+// This function computes the infi-norm of vector x;
+double infi_Norm(std::vector<double> x)
+{
+  double norm=0;
+  for (int i=0;i<x.size();i++)
+    {
+      if (norm<abs(x[i]))
+	{
+	  norm=abs(x[i]);
+	}
+    }
+  return norm;
+}
+
+
+// This function computes the eigenvalue of the matrix A by QR methods, and it will also return the
+// matrix Q during the process;
+void QRSolver(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> &Q, double tol=0.001)
+{
+  int n=A.size();
+  // using householder transform matrix A into the tridiagonal matrix
+  // store it in A and store the Householder unitary matrix in Q; A=QA_Q; 
+  Householder(A,Q);
+
+  // Qk as the initial matrix for every QR factorization, multiplying it together to get the
+  // final unitary matrix;
+  std::vector<std::vector<double>> Qk;
   
+  // Get the subdiagonal entries of the matrix A and verify if its norm smaller than the tolerance;
+  // If it is small enough that means we diagonalize the matrix A and the diagonal entries are
+  // eigenvalues of A.
+  std::vector<double> b(n-1);
+  for(int i=0;i<n-1;i++)
+    {
+      b.push_back(A[i+1][i]);
+    }
+
+  int num=0;
+  while (infi_Norm(b)>tol&&num<2)
+    {
+      num++;
+      
+      identitymatrix(Qk,n);
+
+      QR(A,Qk);
+
+      std::cout<<"The matrix Qk is :\n";
+      std::cout<<"\n";
+      
+      for(int i=0;i<Qk.size();i++)
+	{
+	  for(int j=0; j<Qk.size();j++)
+	    {
+	      std::cout<<Qk[i][j]<<" ";
+	    }
+	  std::cout<<"\n";
+	}
+      std::cout<<"\n";
+
+      // Compute the whole
+      multiply(Q,Qk);
+      // compute R*Q beacuse I store the R(computed above) into A, So I directly use multiply
+      // function to get A*Q into A=RQ.
+      multiply(A,Q);
+
+      //update the entries of b, i.e. the subdiagonal entries of matrix A=RQ;
+        for(int i=0;i<n-1;i++)
+	  {
+	    b.push_back(A[i+1][i]);
+	  }
+    }
 }
 
 
@@ -496,6 +643,30 @@ int main()
   A[3][1]=1;
   A[3][2]=-2;
   A[3][3]=-1;
+
+  
+  //std::vector<double> c={1,2,3,4};
+  //transpose(A);
+
+  std::cout<<"The matrix A is :\n";
+  std::cout<<"\n";
+ 
+      
+  for(int i=0;i<A.size();i++)
+    {
+      for(int j=0; j<A.size();j++)
+	{
+	  std::cout<<A[i][j]<<" ";
+	}
+      std::cout<<"\n";
+    }
+  std::cout<<"\n";
+  
+  // multiply(A,A);
+  
+  // c=multiply(A,c);
+
+  /*
   Householder(A,P);
 
   std::cout<<"The matrix A is :\n";
@@ -513,7 +684,39 @@ int main()
 
   QR(A,Q);
 
+  */
 
+  ////
+  //  ATTENTION:!!!!! the original matrix A is symmetric, but after A= QR to get A_=RQ, A_ might be  // nonsymmetric!!!!!! the function is useless!!!!!!! Please edit the function.
+  QRSolver(A,Q);
+
+  std::cout<<"The matrix A is :\n";
+  std::cout<<"\n";
+      
+  for(int i=0;i<A.size();i++)
+    {
+      for(int j=0; j<A.size();j++)
+	{
+	  std::cout<<A[i][j]<<" ";
+	}
+      std::cout<<"\n";
+    }
+  std::cout<<"\n";
+
+  std::cout<<"The matrix Q is :::::::\n";
+  std::cout<<"\n";
+      
+  for(int i=0;i<Q.size();i++)
+    {
+      for(int j=0; j<Q.size();j++)
+	{
+	  std::cout<<Q[i][j]<<" ";
+	}
+      std::cout<<"\n";
+    }
+  std::cout<<"\n";
+
+  
   std::cout<<"hello world!"<<std::endl;
   //SparseMatrix<double> A;
   return 0;
