@@ -30,6 +30,188 @@
 
 using namespace dealii;
 
+// Computing matrix A times vector b, and using the A[0] to store the result and return it.
+std::vector<double> multiply(std::vector<std::vector<double>> A, std::vector<double> b)
+{
+  int m=A.size();
+  int n=b.size();
+  for (int i=0;i<m;i++)
+    {
+      double temp=0;
+      for(int j=0;j<n;j++)
+	{
+	  temp+=A[i][j]*b[j];
+	}
+      A[0][i]=temp;
+      //std::cout<<temp;
+      //std::cout<<"The result of "<<i+1<<"th iteration\n";			
+      
+    }
+
+  return A[0];
+}
+
+// Design for return transpose matrix of A;
+std::vector<std::vector<double>> transpose(std::vector<std::vector<double>> A)
+{
+  int n=A.size();
+  int m=A[0].size();
+    if (n < m)
+      {
+        for (int i = 0; i < n; i++)
+	  {
+            for (int j = 0; j < i; j++)
+	      {
+                double temp = A[j][i];
+                A[j][i] = A[i][j];
+                A[i][j] = temp;
+	      }
+	  }
+        for (int i = n; i < m; i++)
+	  {
+            std::vector<double> temp;
+            for (int j = 0; j < n; j++)
+	      {
+                temp.push_back(A[j][i]);
+	      }
+            A.push_back(temp);
+	  }
+        for (int i = 0; i < n; i++)
+	  {
+            for (int j = n; j < m; j++)
+	      {
+                A[i].pop_back();
+	      }
+	  }
+      }
+    else if(m<n)
+      {
+        for (int i = 0; i < m; i++)
+	  {
+            for (int j = 0; j < i; j++)
+	      {
+                double temp = A[j][i];
+                A[j][i] = A[i][j];
+		A[i][j] = temp;
+	      }
+	  }
+        for (int i = 0; i < m; i++)
+	  {
+            for (int j = m; j < n; j++)
+	      {
+                A[i].push_back(A[j][i]);
+	      }
+	  }
+
+        for (int i = m; i < n; i++)
+	  {
+            A.pop_back();
+	  }
+
+      }
+    else
+      {
+	for(int i=0;i<n;i++)
+	  {
+	    for(int j=0;j<i;j++)
+	      {
+		double temp=A[j][i];
+		A[j][i]=A[i][j];
+		A[i][j]=temp;
+	      }
+	  }
+      }
+
+    return A;
+
+}
+
+//This function computes the matrix A times matrix B, and its result will be stored in A.
+// It can be improved if reducing the use of the temp matrix to store the original values which
+// is used in computing.
+void multiply(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> B)
+{
+    int n = A.size();
+    int m = B.size();
+    int col = B[0].size();
+    std::vector<double> temp(m);
+    std::vector<std::vector<double>> A0(n, temp);
+
+    if (col < n)
+      {
+        for (int i = 0; i < n; i++)
+	  {
+            for (int j = 0; j < col; j++)
+	      {
+                double tempValue = 0;
+                for (int t = 0; t < m; t++)
+		  {
+                    tempValue += A[i][t] * B[t][j];
+		  }
+                A0[i][j] = tempValue;
+	      }
+            for (int j = col; j < m; j++)
+	      {
+                A0[i].pop_back();
+	      }
+	  }
+
+        A = A0;
+      }
+    else
+      {
+        for (int i = 0; i <n; i++)
+	  {
+            for (int j = 0; j < m; j++)
+	      {
+                double tempValue = 0;
+                for (int t = 0; t < m; t++)
+		  {
+                    tempValue += A[i][t] * B[t][j];
+		  }
+                A0[i][j] = tempValue;
+	      }
+            for (int j = m; j < col; j++)
+	      {
+                double tempValue = 0;
+                for (int t = 0; t < m; t++)
+		  {
+                    tempValue += A[i][t] * B[t][j];
+		  }
+                A0[i].push_back(tempValue);
+	      }
+	  }
+        A = A0;
+      }
+}
+
+// this function will turn the matrix Q into the nxn identity matrix;
+void identitymatrix(std::vector<std::vector<double>> &Q, int n)
+{
+  Q.clear();
+  std::vector<double> temp(n,0);
+  for (int i=0;i<n;i++)
+    {
+      Q.push_back(temp);
+      Q[i][i]=1;
+    }
+}
+
+// This function computes the infi-norm of vector x;
+double infi_Norm(std::vector<double> x)
+{
+  double norm=0;
+  for (int i=0;i<x.size();i++)
+    {
+      if (norm<abs(x[i]))
+	{
+	  norm=abs(x[i]);
+	}
+    }
+  return norm;
+}
+
+
 class Step3
 {
 public:
@@ -204,10 +386,11 @@ std::vector<double> Step3::multiply(std::vector<double> x0)
 void Householder(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> &P)
 {
   int n=A.size();
-  std::cout<<"This is the size of the matrix A"<<n<<" \n";
+  std::vector<std::vector<double>> Pk;
+
   for(int k=0;k<n-2;k++)
     {
-      //      std::cout<<"Check Point 1!!! \n";
+      identitymatrix(Pk, n);
       double q=0;
       double alpha=0;
       // Computing the value of q in the Householder function;
@@ -297,60 +480,19 @@ void Householder(std::vector<std::vector<double>> &A, std::vector<std::vector<do
 	    {
 	      for(int t=k+1;t<n;t++)
 		{
-		  temp[i-k-1]+=v[i-k]*v[t-k]*P[t][j]/(2*RSQ);
+		  temp[i-k-1]+=v[i-k]*v[t-k]*Pk[t][j]/(2*RSQ);
 		}
 	    }
       
 	  //temp=multiply(W,Pj);// to get the jth column of the W*P;
 	  for (int i=k+1;i<=j;i++)
 	    {
-	      P[i][j]-=2*temp[i-k-1];
-	      P[j][i]=P[i][j];
+	      Pk[i][j]-=2*temp[i-k-1];
+	      Pk[j][i]=Pk[i][j];
 	    }
 	}
+      multiply(P,Pk);
 
-      /*
-      std::cout<<"This is the result of "<<k+1<<"th iteration \n";
-      std::cout<<"\n";
-
-      std::cout<<"The vector of partial w is \n";
-      for (int i=0;i<v.size();i++)
-	{
-	  std::cout<<v[i]/sqrt(2*RSQ)<<" ";
-	}
-      std::cout<<"\n";
-      std::cout<<"\n";
-      
-      for(int i=0;i<P.size();i++)
-	{
-	  for(int j=0; j<P.size();j++)
-	    {
-	      std::cout<<P[i][j]<<" ";
-	    }
-	  std::cout<<"\n";
-	}
-
-      
-      //  std::cout<<"The alpha is "<<alpha<<"\n";
-      //  std::cout<<"The r is :: "<<sqrt(RSQ/2)<<"\n";
-      
-      for(int i=0;i<A.size();i++)
-	{
-	  for(int j=0; j<A.size();j++)
-	    {
-	      std::cout<<A[i][j]<<" ";
-	    }
-	  std::cout<<"\n";
-	}
-
-
-      std::cout<<"The vector of u is \n";
-      for (int i=0;i<u.size();i++)
-	{
-	  std::cout<<u[i]<<" ";
-	}
-      std::cout<<"\n";
-      */
     }
 
 }
@@ -440,116 +582,9 @@ void QR(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> &Q
       
     }
 
-  std::cout<<"This is the result of QR:\n";
-  
-
-  std::cout<<"\n";
-  std::cout<<"\n";
-      
-  for(int i=0;i<A.size();i++)
-    {
-      for(int j=0; j<A.size();j++)
-	{
-	  std::cout<<A[i][j]<<" ";
-	}
-      std::cout<<"\n";
-    }
-  std::cout<<"\n";
-  std::cout<<"\n";
-      
-  for(int i=0;i<Q.size();i++)
-    {
-      for(int j=0; j<Q.size();j++)
-	{
-	  std::cout<<Q[i][j]<<" ";
-	}
-      std::cout<<"\n";
-    }
-
 }
 
-// Computing matrix A times vector b, and using the A[0] to store the result and return it.
-std::vector<double> multiply(std::vector<std::vector<double>> A, std::vector<double> b)
-{
-  int m=A.size();
-  int n=b.size();
-  for (int i=0;i<m;i++)
-    {
-      double temp=0;
-      for(int j=0;j<n;j++)
-	{
-	  temp+=A[i][j]*b[j];
-	}
-      A[0][i]=temp;
-      //std::cout<<temp;
-      //std::cout<<"The result of "<<i+1<<"th iteration\n";			
-      
-    }
 
-  return A[0];
-}
-
-// Design for A is square matrix;
-void transpose(std::vector<std::vector<double>> &A)
-{
-  int n=A.size();
-  for(int i=0;i<n;i++)
-    {
-      for(int j=0;j<i;j++)
-	{
-	  double temp=A[j][i];
-	  A[j][i]=A[i][j];
-	  A[i][j]=temp;
-	}
-    }
-}
-
-//This function computes the matrix A times matrix B, and its result will be stored in A.
-// It can be improved if reducing the use of the temp matrix to store the original values which
-// is used in computing.
-void multiply(std::vector<std::vector<double>> &A, std::vector<std::vector<double>> B)
-{
-  std::vector<std::vector<double>> A0(A);
-  // Compute the A*Bi, Bi is the ith column of B, and store it into A[i][:], then transpose A to
-  // get result;
-  for(int i=0;i<A.size();i++)
-    {
-      double temp=0;
-      std::vector<double> tempV;
-      for (int j=0;j<B.size();j++)
-	{
-	  tempV.push_back(B[j][i]);
-	}
-      A[i]=multiply(A0,tempV);
-    }
-  transpose(A);
-}
-
-// this function will turn the matrix Q into the nxn identity matrix;
-void identitymatrix(std::vector<std::vector<double>> &Q, int n)
-{
-  Q.clear();
-  std::vector<double> temp(n,0);
-  for (int i=0;i<n;i++)
-    {
-      Q.push_back(temp);
-      Q[i][i]=1;
-    }
-}
-
-// This function computes the infi-norm of vector x;
-double infi_Norm(std::vector<double> x)
-{
-  double norm=0;
-  for (int i=0;i<x.size();i++)
-    {
-      if (norm<abs(x[i]))
-	{
-	  norm=abs(x[i]);
-	}
-    }
-  return norm;
-}
 
 
 // This function computes the eigenvalue of the matrix A by QR methods, and it will also return the
@@ -559,7 +594,7 @@ void QRSolver(std::vector<std::vector<double>> &A, std::vector<std::vector<doubl
   int n=A.size();
   // using householder transform matrix A into the tridiagonal matrix
   // store it in A and store the Householder unitary matrix in Q; A=QA_Q; 
-  Householder(A,Q);
+  //Householder(A,Q);
 
   // Qk as the initial matrix for every QR factorization, multiplying it together to get the
   // final unitary matrix;
@@ -568,39 +603,30 @@ void QRSolver(std::vector<std::vector<double>> &A, std::vector<std::vector<doubl
   // Get the subdiagonal entries of the matrix A and verify if its norm smaller than the tolerance;
   // If it is small enough that means we diagonalize the matrix A and the diagonal entries are
   // eigenvalues of A.
-  std::vector<double> b(n-1);
+  std::vector<double> b(n-1,1);
   for(int i=0;i<n-1;i++)
     {
       b.push_back(A[i+1][i]);
     }
 
   int num=0;
-  while (infi_Norm(b)>tol&&num<2)
+  while (infi_Norm(b)>tol&&num<1000)
     {
       num++;
+
+      b.clear();
+
+      Householder(A,Q);
       
       identitymatrix(Qk,n);
 
       QR(A,Qk);
-
-      std::cout<<"The matrix Qk is :\n";
-      std::cout<<"\n";
-      
-      for(int i=0;i<Qk.size();i++)
-	{
-	  for(int j=0; j<Qk.size();j++)
-	    {
-	      std::cout<<Qk[i][j]<<" ";
-	    }
-	  std::cout<<"\n";
-	}
-      std::cout<<"\n";
-
-      // Compute the whole
+     
+      // Compute the num-th iteration, get the Qk in this step;
       multiply(Q,Qk);
       // compute R*Q beacuse I store the R(computed above) into A, So I directly use multiply
       // function to get A*Q into A=RQ.
-      multiply(A,Q);
+      multiply(A,Qk);
 
       //update the entries of b, i.e. the subdiagonal entries of matrix A=RQ;
         for(int i=0;i<n-1;i++)
@@ -716,6 +742,21 @@ int main()
     }
   std::cout<<"\n";
 
+  std::cout<<"check if the matrix Q is orthogonal\n";
+  multiply(Q,transpose(Q));
+
+  std::cout<<"The matrix Q*Q' is :::::::\n";
+  std::cout<<"\n";
+      
+  for(int i=0;i<Q.size();i++)
+    {
+      for(int j=0; j<Q.size();j++)
+	{
+	  std::cout<<Q[i][j]<<" ";
+	}
+      std::cout<<"\n";
+    }
+  std::cout<<"\n";
   
   std::cout<<"hello world!"<<std::endl;
   //SparseMatrix<double> A;
