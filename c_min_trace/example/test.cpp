@@ -231,7 +231,7 @@ double infi_Norm(std::vector<double> x)
 }
 
 // This function computes the inner-product corresponding with M of <u,v>
-void M_inner(std::vector<double>x){}
+void M_inner(SparseMatrix<double> M, std::vector<double>u, std::vector<double>v){}
 
 
 class Step3
@@ -692,7 +692,9 @@ void QRSolver(std::vector<std::vector<double>> &A, std::vector<std::vector<doubl
 }
 
 // The function using Conjugate Gradient method to get the solution of the problem Ax=b;
-std::vector<double> CG(SparseMatrix<double>A, std::vector<double> b, std::vector<double> &x)
+// It is modified CG function that is designed for solve PAP delta = PAX which needs A, M, X, b;
+// ATTENTION: It can be revised as a class for A and M, It will be more convenient.
+std::vector<double> CG(SparseMatrix<double>A, SparseMatrix<double> M, std::vector<std::vector<double>> X, std::vector<double> b, std::vector<double> &x)
 {
   return x;
 }
@@ -732,7 +734,8 @@ std::vector<double> min_trace(SparseMatrix<double> A, SparseMatrix<double>M, int
   int n=A.m();
   std::vector<std::vector<double>>V(p);
   std::vector<std::vector<double>>W(n);
-  std::vector<std::vector<double>> MXTheta(p), U, X, Rk, P, delta;
+  std::vector<std::vector<double>> MXTheta(p), U, X, Rk, delta;
+  //SparseMatrix<double> P;
   
   // Construct the initial matrix V1 which is a n x p matrix and it is orthogonal by M, i.e.
   // V1'*M*V1=I_p;
@@ -786,7 +789,7 @@ std::vector<double> min_trace(SparseMatrix<double> A, SparseMatrix<double>M, int
       */
 
       // Compute matrix P;
-      P=matrixP(M, X);
+      //  P=matrixP(M, X);
       
       // Solve the SPD eigenvalue problem by modified PCG or CG;
       // PAP delta_k = PA X_k;
@@ -798,7 +801,7 @@ std::vector<double> min_trace(SparseMatrix<double> A, SparseMatrix<double>M, int
 	  std::vector<double> x(n,0);
 	  SparseMatrix<double> PAP;
 	  std::vector<double> PAXi;
-	  delta[i]=CG(PAP, PAXi, x);
+	  delta[i]=CG(A, M, X, PAXi, x);
 	}
 
 

@@ -1,32 +1,8 @@
-#include <iostream>
-#include <fstream>
-#include <iterator>
-#include <mintrace.h>
-// Following header files are used in the step-3 in the examples of deal.II;
-// Here just using these to get a large scale matrix as the test data.
-#include <deal.II/grid/tria.h>
-#include <deal.II/dofs/dof_handler.h>
-#include <deal.II/grid/grid_generator.h>
-#include <deal.II/grid/tria_accessor.h>
-#include <deal.II/grid/tria_iterator.h>
-#include <deal.II/dofs/dof_accessor.h>
-#include <deal.II/fe/fe_q.h>
-#include <deal.II/dofs/dof_tools.h>
-#include <deal.II/fe/fe_values.h>
-#include <deal.II/base/quadrature_lib.h>
-#include <deal.II/base/function.h>
-#include <deal.II/numerics/vector_tools.h>
-#include <deal.II/numerics/matrix_tools.h>
-#include <deal.II/lac/vector.h>
-#include <deal.II/lac/full_matrix.h>
+#include<iostream>
+#include<fstream>
+#include<vector>
 #include <deal.II/lac/sparse_matrix.h>
-#include <deal.II/lac/compressed_sparsity_pattern.h>
-#include <deal.II/lac/solver_cg.h>
-#include <deal.II/lac/precondition.h>
-// Finally, this is for output to a file and to the console:
-#include <deal.II/numerics/data_out.h>
-#include <fstream>
-#include <iostream>
+#include <deal.II/lac/sparsity_pattern.h>
 
 using namespace dealii;
 
@@ -230,49 +206,13 @@ double infi_Norm(std::vector<double> x)
   return norm;
 }
 
-// This function computes the inner-product corresponding with M of <u,v>
-void M_inner(std::vector<double>x){}
-
-
-class Step3
-{
-public:
-  Step3 ();
-
-  void run ();
-  void make_grid ();
-  void setup_system ();
-  void assemble_system ();
-
-  //void multiply(std::vector<double>& x);
-  std::vector<double> multiply(std::vector<double> x0);
-
-  
-  //void solve ();
-  //
-  void output_results () const;
-
-  Triangulation<2>     triangulation;
-  FE_Q<2>              fe;
-  DoFHandler<2>        dof_handler;
-  SparsityPattern      sparsity_pattern;
-  SparseMatrix<double> system_matrix;
-
-  Vector<double>       solution;
-  Vector<double>       system_rhs;
-  
-  //std::vector<double> x;
-
-};
-
-
-
-//
-//
-//void Step3::multiply(std::vector<double>& x)
+//////
+// Multiplication of SparseMatrix A and vector x0;
 std::vector<double> multiply(SparseMatrix<double>A, std::vector<double> x0)
 {
   std::vector<double> x(x0.size(),0);
+  std::cout<<"Flag 1!!\n";
+  std::cout<<A.n()<<"\n";
   
   if (A.n()!=x0.size())
     {
@@ -296,142 +236,6 @@ std::vector<double> multiply(SparseMatrix<double>A, std::vector<double> x0)
     }
 }
 
-
-
-Step3::Step3 ()
-  :
-  fe (1),
-  dof_handler (triangulation)
-{}
-
-void Step3::make_grid ()
-{
-  // First create the grid and refine all cells five times. Since the initial
-  // grid (which is the square [-1,1]x[-1,1]) consists of only one cell, the
-  // final grid has 32 times 32 cells, for a total of 1024.
-  GridGenerator::hyper_cube (triangulation, -1, 1);
-  triangulation.refine_global (5);
-  // Unsure that 1024 is the correct number?  Let's see: n_active_cells
-  // returns the number of active cells:
-  std::cout << "Number of active cells: "
-            << triangulation.n_active_cells()
-            << std::endl;
-  
-  std::cout << "Total number of cells: "
-            << triangulation.n_cells()
-            << std::endl;
-  // Note the distinction between n_active_cells() and n_cells().
-}
-
-void Step3::setup_system ()
-{
-  dof_handler.distribute_dofs (fe);
-  std::cout << "Number of degrees of freedom: "
-            << dof_handler.n_dofs()
-            << std::endl;
-  
-  CompressedSparsityPattern c_sparsity(dof_handler.n_dofs());
-  DoFTools::make_sparsity_pattern (dof_handler, c_sparsity);
-  sparsity_pattern.copy_from(c_sparsity);
-
-  system_matrix.reinit (sparsity_pattern);
-
-  solution.reinit (dof_handler.n_dofs());
-  system_rhs.reinit (dof_handler.n_dofs());
-}
-
-void Step3::assemble_system ()
-{
-
-  QGauss<2>  quadrature_formula(2);
-
-  FEValues<2> fe_values (fe, quadrature_formula,
-                         update_values | update_gradients | update_JxW_values);
-
-  const unsigned int   dofs_per_cell = fe.dofs_per_cell;
-  const unsigned int   n_q_points    = quadrature_formula.size();
-
-  FullMatrix<double>   cell_matrix (dofs_per_cell, dofs_per_cell);
-  Vector<double>       cell_rhs (dofs_per_cell);
-
-  std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-
-  DoFHandler<2>::active_cell_iterator
-  cell = dof_handler.begin_active(),
-  endc = dof_handler.end();
-  for (; cell!=endc; ++cell)
-    {
-      fe_values.reinit (cell);
-
-      cell_matrix = 0;
-      cell_rhs = 0;
-
-      for (unsigned int i=0; i<dofs_per_cell; ++i)
-        for (unsigned int j=0; j<dofs_per_cell; ++j)
-          for (unsigned int q_point=0; q_point<n_q_points; ++q_point)
-            cell_matrix(i,j) += (fe_values.shape_grad (i, q_point) *
-                                 fe_values.shape_grad (j, q_point) *
-                                 fe_values.JxW (q_point));
-
-      for (unsigned int i=0; i<dofs_per_cell; ++i)
-        for (unsigned int q_point=0; q_point<n_q_points; ++q_point)
-          cell_rhs(i) += (fe_values.shape_value (i, q_point) *
-                          1 *
-                          fe_values.JxW (q_point));
-
-      cell->get_dof_indices (local_dof_indices);
-      ///////////////////////
-      // Following commands compute the interior of the matrix and store them into the matrix.
-      
-      for (unsigned int i=0; i<dofs_per_cell; ++i)
-        for (unsigned int j=0; j<dofs_per_cell; ++j)
-          system_matrix.add (local_dof_indices[i],
-                             local_dof_indices[j],
-                             cell_matrix(i,j));
-
-      // And again, we do the same thing for the right hand side vector.
-      for (unsigned int i=0; i<dofs_per_cell; ++i)
-        system_rhs(local_dof_indices[i]) += cell_rhs(i);
-    }
-
-  std::map<types::global_dof_index,double> boundary_values;
-  VectorTools::interpolate_boundary_values (dof_handler,
-                                            0,
-                                            ZeroFunction<2>(),
-                                            boundary_values);
-
-  MatrixTools::apply_boundary_values (boundary_values,
-                                      system_matrix,
-                                      solution,
-                                      system_rhs);
-}
-
-//void Step3::multiply(std::vector<double>& x)
-std::vector<double> Step3::multiply(std::vector<double> x0)
-{
-  std::vector<double> x(x0.size(),0);
-  
-  if (system_matrix.n()!=x0.size())
-    {
-      std::cout<<"Function multiply() ERROR: The sizes of matrix and vector are not same! Please check it!\n";
-    }
-  else
-    {
-      // std::cout<<"TEST POINT 2 \n";
-      for(int k=0;k<system_matrix.m();k++)
-	{
-	  //std::cout<<"this is the "<<k<<"th iterations \n";
-	  SparseMatrix<double>::const_iterator i=system_matrix.begin(k);
-	  
-	  while(i!=system_matrix.end(k))
-	    {
-	      x[k]+=i->value()*x0[i->column()];
-	      ++i;
-	    }
-	}
-      return x;
-    }
-}
 
 //void Householder(std::vector<std::vector<double>> *A, std::vector<std::vector<double>> *P)
 //void Householder(std::vector<std::vector<double>> *A, std::vector<std::vector<double>> *P)
@@ -553,38 +357,6 @@ void Householder(std::vector<std::vector<double>> &A, std::vector<std::vector<do
 }
 
 
-
-void Step3::run ()
-{
-  make_grid ();
-  setup_system();
-  assemble_system ();
-  std::cout<<system_matrix.m()<<"\n";
-  std::cout<<system_matrix.n()<<"\n";
-
-  //std::cout<<system_matrix.begin()->value()<<"\n";
-  //std::cout<<system_matrix.begin()->column()<<"\n";
-
-  std::vector<double> x(system_matrix.n(),1);
-  //
-  // Due to the system_matrix is a member of the class step3, but x is not a member of the class,
-  // So we can not directly define the multiply function out of the class and using the
-  // system_matrix directly.
-  // we need to get a variable A equals to the system_matrix but A is not a member of the class;
-  
-  std::cout << "CheckPoint 1 \n";
-
-  // multiply(x);
-  x=multiply(x);
-  //std::cout<<"This is the value of the vector x"<<x[0]<<std::endl;
-  std::ofstream out ("sparse_matrix");
-  system_matrix.print(out);
-
-  std::ofstream output_file ("solution");
-  for (const auto &e : x) output_file << e << "\n";
-  
-}
-
 ///////
 // This function computes the QR factorization of the tridiagonal matrix A.
 // Input: tridiagonal matrix A, identity matrix Q
@@ -692,129 +464,92 @@ void QRSolver(std::vector<std::vector<double>> &A, std::vector<std::vector<doubl
 }
 
 
+class MinTrace
+{
+ public:
+  MinTrace();
+  MinTrace(SparseMatrix<double> A, SparseMatrix<double> M, int p=1);
 
+  // get the random initial matrix V which satisifies that: V'*M*V=I_p;
+  std::vector<std::vector<double>>rand_V(); 
+
+  // compute the orthonormal vectors corresponding to M from the original vectors U={u_1,u_2,...,u_p};
+  std::vector<std::vector<double>> M_GS(std::vector<std::vector<double>> U);
+  
+  // Compute the solution vector of the equation of X_k[i] and PAP*d_i=PA*X_k[i];
+  std::vector<double>CG(std::vector<double> X_ki);
+  // get the p smallest eigenvalues of A correponding with M;
+  std::vector<double> min_trace(int max_iter=10, double eps=1e-03);
+  
+  
+ private:
+  SparseMatrix<double>A;
+  SparseMatrix<double>M;
+  int p; // The number of the eigenvalues to be solved;
+};
+
+double test(SparseMatrix<double> A)
+{
+  return A.m();
+}
 
 int main()
 {
-  Step3 laplace_problem;
-  /////laplace_problem.run ();
-
-  
-  //std::stringstream result;
-  std::vector<double> b(4,0);
-  std::vector<std::vector<double>> A(4, b), P(4,b);
-  P[0][0]=1;
-  P[1][1]=1;
-  P[2][2]=1;
-  P[3][3]=1;
-  std::vector<std::vector<double>> Q(P);
-
-  A[0][0]=4;
-  A[0][1]=1;
-  A[0][2]=-2;
-  A[0][3]=2;
-  A[1][0]=1;
-  A[1][1]=2;
-  A[1][2]=0;
-  A[1][3]=1;
-  A[2][0]=-2;
-  A[2][1]=0;
-  A[2][2]=3;
-  A[2][3]=-2;
-  A[3][0]=2;
-  A[3][1]=1;
-  A[3][2]=-2;
-  A[3][3]=-1;
-
-  
-  //std::vector<double> c={1,2,3,4};
-  //transpose(A);
-
-  std::cout<<"The matrix A is :\n";
-  std::cout<<"\n";
- 
-      
-  for(int i=0;i<A.size();i++)
+  SparseMatrix<double> A, M;
+  // std::ofstream sparsematrix1 ("original_matrix.1");
+  //A.print(sparsematrix1);
+  std::vector<unsigned int> row_length(10,10);
+  unsigned int t=3;
+  SparsityPattern sparsity_pattern(10,10,{2,3,3,3,3,3,3,3,3,2});
+  SparsityPattern sp2(10,10,1);
+  //sparsity_pattern.add(1,2);
+  sparsity_pattern.add(0,1);
+  sparsity_pattern.add(9,8);
+  for (int i=1;i<9;i++)
     {
-      for(int j=0; j<A.size();j++)
-	{
-	  std::cout<<A[i][j]<<" ";
-	}
-      std::cout<<"\n";
+      sparsity_pattern.add(i,i+1);
+      sparsity_pattern.add(i,i-1);
     }
-  std::cout<<"\n";
   
-  // multiply(A,A);
+  A.reinit(sparsity_pattern);
+  M.reinit(sp2);
+
+  // In this way, I can construct a SparseMatrix to be the test data for the algorithm.
+  for (int k=0;k<A.m();k++)
+    {
+      SparseMatrix<double>::iterator i=A.begin(k);
+      i->value()=2;
+      while(i!=A.end(k))
+	{
+	  i->value()+=1;
+	  ++i;
+	}
+    }
+
+  SparseMatrix<double>::iterator i=M.begin();
+  double num=0;
+  while(i!=M.end())
+    {
+      num=num+1;
+      i->value()=num;
+      ++i;
+    }
   
-  // c=multiply(A,c);
+  std::ofstream out ("sparsity_pattern.1");
+  sparsity_pattern.print_gnuplot(out);
 
-  /*
-  Householder(A,P);
+  std::ofstream sparsematrix ("sparse_matrix.1");
+  A.print(sparsematrix);
 
-  std::cout<<"The matrix A is :\n";
-  std::cout<<"\n";
-      
-  for(int i=0;i<A.size();i++)
+  std::ofstream sparsematrix2 ("sparse_matrix.2");
+  M.print(sparsematrix2); 
+
+  std::vector<double> x(10,1);
+  //x=compute::multiply(A,x);
+  for(int i=0;i<x.size();i++)
     {
-      for(int j=0; j<A.size();j++)
-	{
-	  std::cout<<A[i][j]<<" ";
-	}
-      std::cout<<"\n";
+      std::cout<<x[i]<<" ";
     }
-  std::cout<<"\n";
-
-  QR(A,Q);
-
-  */
-
-  ////
-  //  ATTENTION:!!!!! the original matrix A is symmetric, but after A= QR to get A_=RQ, A_ might be  // nonsymmetric!!!!!! the function is useless!!!!!!! Please edit the function.
-  QRSolver(A,Q);
-
-  std::cout<<"The matrix A is :\n";
-  std::cout<<"\n";
-      
-  for(int i=0;i<A.size();i++)
-    {
-      for(int j=0; j<A.size();j++)
-	{
-	  std::cout<<A[i][j]<<" ";
-	}
-      std::cout<<"\n";
-    }
-  std::cout<<"\n";
-
-  std::cout<<"The matrix Q is :::::::\n";
-  std::cout<<"\n";
-      
-  for(int i=0;i<Q.size();i++)
-    {
-      for(int j=0; j<Q.size();j++)
-	{
-	  std::cout<<Q[i][j]<<" ";
-	}
-      std::cout<<"\n";
-    }
-  std::cout<<"\n";
-
-  std::cout<<"check if the matrix Q is orthogonal\n";
-  multiply(Q,transpose(Q));
-
-  std::cout<<"The matrix Q*Q' is :::::::\n";
-  std::cout<<"\n";
-      
-  for(int i=0;i<Q.size();i++)
-    {
-      for(int j=0; j<Q.size();j++)
-	{
-	  std::cout<<Q[i][j]<<" ";
-	}
-      std::cout<<"\n";
-    }
-  std::cout<<"\n";
-  
-  std::cout<<"hello world!"<<std::endl;
-  //SparseMatrix<double> A;
+  //sparsity_pattern.print();
   return 0;
 }
