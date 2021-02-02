@@ -211,8 +211,8 @@ double infi_Norm(std::vector<double> x)
 std::vector<double> multiply(const SparseMatrix<double> &A, std::vector<double> x0)
 {
   std::vector<double> x(x0.size(),0);
-  //  std::cout<<"Flag 1!!\n";
-  //std::cout<<A.n()<<"\n";
+  std::cout<<"Flag 1!!\n";
+  std::cout<<A.n()<<"\n";
   
   if (A.n()!=x0.size())
     {
@@ -490,7 +490,7 @@ class MinTrace
 
 MinTrace::MinTrace()
 {
-  int p=3;
+  int p=0;
   SparsityPattern sparsity_pattern(10,10,{2,3,3,3,3,3,3,3,3,2});
   SparsityPattern sp2(10,10,1);
   //sparsity_pattern.add(1,2);
@@ -540,21 +540,11 @@ std::vector<std::vector<double>> MinTrace::M_GS(std::vector<std::vector<double>>
 
 std::vector<std::vector<double>> MinTrace::rand_V()
 {
-  std::cout<<"CheckPoint1\n";
   std::vector<double> x(M.n(),0);
-  for (int i=0;i<x.size();i++)
-    {
-      std::cout<<x[i]<<" ";
-    }
-  std::cout<<"\n";
-  std::cout<<"CheckPoint666 \n";
   std::vector<std::vector<double>> V(p,x);
-  std::cout<<"CheckPoint12314113\n";
-  
   V[0][0]=1;
-  V[1][1]=sqrt(2.0)/2;
-  V[2][2]=sqrt(3.0)/3;
-  std::cout<<"231wqrdasd24121321321321adsadq2q1312321sada\n";
+  V[1][1]=sqrt(2)/2;
+  V[2][2]=sqrt(3)/3;
   return V;
 }
 
@@ -566,20 +556,14 @@ std::vector<double> MinTrace::min_trace(int max_iter=10, double eps=1e-03)
   std::vector<std::vector<double>> V; // V is an n x p matrix and stored as V[p][n];
 
   V=rand_V();
-  std::cout<<"wewqewqewqewqeqw\n";
   //  for(int k=0;k<max_iter;k++)
     for(int k=0;k<1;k++)
     {
-      std::cout<<"CheckPoint222\n";
       std::vector<std::vector<double>> VMV(p,x),tmpVMV(p); // VMV is a p x p matrix;
-      std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n";
       for(int i=0;i<p;i++)
 	{
 	  tmpVMV[i]=multiply(M,V[i]);
-	  std::cout<<"CheckPoint111111111\n";
 	}
-
-      std::cout<<"CheckPoint2\n";
       for(int i=0;i<p;i++)
 	{
 	  for(int j=0;j<p;j++)
@@ -663,11 +647,11 @@ int main()
     {
       std::cout<<x[i]<<" ";
     }
- // std::cout<<"\n"<<1e-03<<"\n";
+  std::cout<<"\n"<<1e-03<<"\n";
 
   MinTrace solve;
   
-//  solve.min_trace();
+  solve.min_trace();
   //sparsity_pattern.print();
   return 0;
 }
