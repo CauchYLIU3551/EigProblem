@@ -1,4 +1,4 @@
-#include "../CGSolver.h"
+#include "CG/CGSolver.h"
 
 void fun2(int *a,int **b)
 {

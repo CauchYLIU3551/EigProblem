@@ -1,4 +1,4 @@
-#include "CGSolver.h"
+#include "CG/CGSolver.h"
 
 CGSolver::CGSolver():
   is_initialized(false),
