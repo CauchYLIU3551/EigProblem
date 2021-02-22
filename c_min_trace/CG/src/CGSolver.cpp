@@ -3,7 +3,10 @@
 CGSolver::CGSolver():
   is_initialized(false),
   toler(1.e-12)
-{};
+{
+  dealii::SparseMatrix<double> Temp;
+  A=&Temp;
+};
 
 CGSolver::CGSolver(const Matrix& M, double tol)
 {

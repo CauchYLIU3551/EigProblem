@@ -1,0 +1,9 @@
+#include <trace/mintrace.h>
+#include <CG/CGSolver.h>
+
+int main()
+{
+  CGSolver aaa;
+  std::cout<<"Hello world!\n";
+  return 0;
+}
