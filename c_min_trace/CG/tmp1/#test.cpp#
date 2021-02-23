@@ -1,5 +1,5 @@
 #include "CG/CGSolver.h"
-
+/*
 void fun2(int *a,int **b)
 {
   //b=&a;
@@ -11,6 +11,7 @@ void fun3(int &w, int **b)
 {
   **b=w;
 }
+*/
 
 int main()
 {
@@ -20,6 +21,9 @@ int main()
   // fun3(a,&b);
   //std::cout<<*b<<std::endl;
   CGSolver AAA;
+  std::cout<<AAA.tolerence()<<std::endl;
+
+
   dealii::SparseMatrix<double> A, M;
   // std::ofstream sparsematrix1 ("original_matrix.1");
   //A.print(sparsematrix1);
@@ -66,7 +70,7 @@ int main()
 	}
     }
 
-  //std::cout<<AAA.tolerence()<<std::endl;
+  std::cout<<AAA.tolerence()<<std::endl;
   CGSolver solve(A), sol2(M);
   std::cout<<solve.A->n()<<std::endl;
   std::vector<double> x0(10,0),B(10), x1(3,0),B2(3,0);
@@ -75,7 +79,8 @@ int main()
     {
       B[i]=5;
     }
-  B[9]=4;
+  B[9:q
+    ]=4;
   B2[0]=1;
   B2[2]=1.8;
   solve.solve(x0,B,1.0e-12,100);
@@ -94,5 +99,6 @@ int main()
   //std::cout<<(*P).n()<<std::endl;
   //std::ofstream sparsematrix ("sparse_matrix.2");
   //M.print(sparsematrix);
+
   return 0;
 }

@@ -38,7 +38,7 @@ class TraceSolver:public CGSolver
 
   void rand_V(int p, std::vector<std::vector<double>>& V);
   void Householder(std::vector<std::vector<double>> &a);
-  void QR(std::vector<std::vector<double>> &a);
+  void QR(std::vector<std::vector<double>> &a, std::vector<std::vector<double>>& Q);
   void get_VtAV(std::vector<std::vector<double>> a);
   void QRSolver(std::vector<std::vector<double>> a);
   double get_residual();
@@ -51,9 +51,10 @@ class TraceSolver:public CGSolver
  private:
   const Matrix* A;
   const Matrix* M;
-  std::vector<double> X;
+  std::vector<std::vector<double>> X; // solution matrix, which contains the eigenvectors of the eigenvalues.
   std::vector<double> theta;// storing the diagonal entries of the QR factorization and maybe used
   // as shift in future advancing function.
+  std::vector<double> lambda; // storing the eigenvalues;
 
 };
 

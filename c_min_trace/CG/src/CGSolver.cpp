@@ -6,6 +6,8 @@ CGSolver::CGSolver():
 {
   dealii::SparseMatrix<double> Temp;
   A=&Temp;
+  //res.reinit(0);
+  //Ap.reinit(0);
 };
 
 CGSolver::CGSolver(const Matrix& M, double tol)
@@ -309,6 +311,6 @@ void CGSolver::solve(dealii::Vector<double>& x, const dealii::Vector<double>& r,
       iter++;
     }
 
-  std::cerr << "CGSolver converge at "<<iter<<" step"<<std::endl;
+  std::cerr << "CGSolver converge at "<<iter-1<<" step"<<std::endl;
  
 }
