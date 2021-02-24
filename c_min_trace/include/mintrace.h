@@ -40,18 +40,19 @@ class TraceSolver:public CGSolver
   void Householder(std::vector<std::vector<double>> &a);
   void QR(std::vector<std::vector<double>> &a, std::vector<std::vector<double>>& Q);
   void get_VtAV(std::vector<std::vector<double>> a);
-  void QRSolver(std::vector<std::vector<double>> a);
+  void QRSolver(std::vector<std::vector<double>>& a, double tol=1.0e-3);
   double get_residual();
-
+  void get_MX();
   virtual void get_Ap(std::vector<double> x);
   
   void solve(int p,
 	     double tol=0.0,
 	     u_int step=20);
- private:
+  /////private:
   const Matrix* A;
   const Matrix* M;
   std::vector<std::vector<double>> X; // solution matrix, which contains the eigenvectors of the eigenvalues.
+  std::vector<std::vector<double>> MX; // Storing the matrix MX=M*X_k, in fact it is used to compute the matrix P in trace minimization process;
   std::vector<double> theta;// storing the diagonal entries of the QR factorization and maybe used
   // as shift in future advancing function.
   std::vector<double> lambda; // storing the eigenvalues;

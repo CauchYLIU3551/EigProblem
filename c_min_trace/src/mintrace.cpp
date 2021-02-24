@@ -77,6 +77,48 @@ void multiply(std::vector<std::vector<double>> &A, std::vector<std::vector<doubl
       }
 }
 
+// Multiplication of SparseMatrix A and vector x0;
+std::vector<double> multiply(const SparseMatrix<double>* A, std::vector<double> x0)
+{
+  std::vector<double> x(x0.size(),0);
+  //  std::cout<<"Flag 1!!\n";
+  //std::cout<<A.n()<<"\n";
+  
+  if (A->n()!=x0.size())
+    {
+      std::cout<<"Function multiply() ERROR: The sizes of matrix and vector are not same! Please check it!\n";
+    }
+  else
+    {
+      // std::cout<<"TEST POINT 2 \n";
+      for(int k=0;k<A->m();k++)
+	{
+	  //std::cout<<"this is the "<<k<<"th iterations \n";
+	  SparseMatrix<double>::const_iterator i=A->begin(k);
+	  
+	  while(i!=A->end(k))
+	    {
+	      x[k]+=i->value()*x0[i->column()];
+	      ++i;
+	    }
+	}
+      return x;
+    }
+}
+
+// This function computes the infi-norm of vector x;
+double infi_Norm(std::vector<double> x)
+{
+  double norm=0;
+  for (int i=0;i<x.size();i++)
+    {
+      if (norm<abs(x[i]))
+	{
+	  norm=abs(x[i]);
+	}
+    }
+  return norm;
+}
 
 
 /////////////////////////////////////////////
@@ -92,7 +134,9 @@ TraceSolver::TraceSolver(const Matrix& a, const Matrix& m){
   theta.resize(A->m());
 }
 
-void TraceSolver::rand_V(int p, std::vector<std::vector<double>>& V){};
+void TraceSolver::rand_V(int p, std::vector<std::vector<double>>& V)
+{
+};
 void TraceSolver::get_VtAV(std::vector<std::vector<double>> V){};
 //void TraceSolver::Householder(std::vector<std::vector<double>> &a){};
 void TraceSolver::Householder(std::vector<std::vector<double>> &a)
@@ -247,13 +291,75 @@ void TraceSolver::QR(std::vector<std::vector<double>> &a,   std::vector<std::vec
   //multiply(a,Q); this update a=RQ, because after this QR function, a=R, after this command, a=RQ;
 }
 
-void TraceSolver::QRSolver(std::vector<std::vector<double>> V){};
-void TraceSolver::get_Ap(std::vector<double> x){};
+void TraceSolver::QRSolver(std::vector<std::vector<double>> &a, double tol)
+{
+  int n=a.size();
+  // Qk as the initial matrix for every QR factorization, multiplying it together to get the
+  // final unitary matrix;
+  std::vector<std::vector<double>> Qk;
+  
+  // Get the subdiagonal entries of the matrix A and verify if its norm smaller than the tolerance;
+  // If it is small enough that means we diagonalize the matrix A and the diagonal entries are
+  // eigenvalues of A.
+  std::vector<double> b(n-1,1);
+  for(int i=0;i<n-1;i++)
+    {
+      b.push_back(a[i+1][i]);
+    }
+
+  int num=0;
+  while (infi_Norm(b)>tol&&num<1000)
+    {
+      num++;
+
+      b.clear();
+
+      Householder(a);
+      
+      identitymatrix(Qk,n);
+
+      QR(a,Qk);
+     
+      // Compute the num-th iteration, get the Qk in this step;
+      multiply(X,Qk);
+      // compute R*Q beacuse I store the R(computed above) into A, So I directly use multiply
+      // function to get A*Q into A=RQ.
+      multiply(a,Qk);
+
+      //update the entries of b, i.e. the subdiagonal entries of matrix A=RQ;
+      for(int i=0;i<n-1;i++)
+	{
+	  b.push_back(a[i+1][i]);
+	}
+    }
+};
+
+void TraceSolver::get_MX()
+{
+  MX.clear();
+  //MX.resize(X.size());
+  std::vector<double> temp(X.size(),0);
+  for(int j=0;j<X[0].size();j++)
+    {
+      for (int i=0;i<X.size();i++)
+	{
+	  temp[i]=X[i][j];
+	}
+      temp=multiply(M,temp);
+      MX.push_back(temp);// so in this way, MX[i][j] = MX(j, i) in fact. Because in computing, I store the columns of M*X in every row of MX;
+    }
+
+};
+
+void TraceSolver::get_Ap(std::vector<double> p)
+{
+  
+};
 
 double TraceSolver::get_residual()
 {
-  double res=0;
-  return res;
+  double residual=0;
+  return residual;
 }
 
 /*void TraceSolver::solve(std::vector<double>& x,double tol, u_int step){}*/
