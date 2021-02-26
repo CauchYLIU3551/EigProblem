@@ -8,8 +8,8 @@
 % Output: the summand of the p eigenvalues;
 
 n=10;
-p=5;
-max_iter=1000;
+p=3;
+max_iter=1;
 tol=10^-5;
 A=diag(2*ones(10,1));
 A=A+diag(ones(9,1),-1)+diag(ones(9,1),1);
@@ -38,8 +38,8 @@ for k=1:max_iter
     ## Maybe the PCG solver is used to solve the linear equations, not the 
     ## Rayleigh quotient minimization algorithm!
     ####x=PCG(P*(A-theta(i,i)*M)*P,P*R*e(:,i),x);
-    x=CG(P*(A-theta(i,i)*M)*P,P*R*e(:,i),x);
-    #x=CG(P*A*P,P*A*X*e(:,i),x);
+    #x=CG(P*(A-theta(i,i)*M)*P,P*R*e(:,i),x);
+    x=CG(P*A*P,P*A*X*e(:,i),x);
     delta(:,i)=x;
     X(:,i)=X(:,i)-x;
   end

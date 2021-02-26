@@ -39,13 +39,17 @@ class TraceSolver:public CGSolver
   void rand_V(int p, std::vector<std::vector<double>>& V);
   void Householder(std::vector<std::vector<double>> &a);
   void QR(std::vector<std::vector<double>> &a, std::vector<std::vector<double>>& Q);
-  void get_VtAV(std::vector<std::vector<double>> a);
+  void get_VtAV(std::vector<std::vector<double>>& a);
   void QRSolver(std::vector<std::vector<double>>& a, double tol=1.0e-3);
   double get_residual();
   void get_MX();
+  std::vector<double> proj_M(std::vector<double> u, std::vector<double> v);
+  void GS_M();
+  void get_Px(std::vector<double> & x);
   virtual void get_Ap(std::vector<double> x);
+  virtual void get_res(std::vector<double> x, std::vector<double> r);
   
-  void solve(int p,
+  void mintrace(int p,
 	     double tol=0.0,
 	     u_int step=20);
   /////private:

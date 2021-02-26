@@ -1,93 +1,132 @@
-#include "CG/CGSolver.h"
+#include<iostream>
+#include<cmath>
+#include<vector>
 
-void fun2(int *a,int **b)
+double inner(std::vector<double> a, std::vector<double> b)
 {
-  //b=&a;
-  **b=*a;
-  std::cout<<"This is value of b"<<**b<<std::endl;
+  int n=a.size();
+  double sum=0;
+  for(int i=0;i<n;i++)
+    {
+      sum+=a[i]*b[i];
+    }
+  return sum;
 }
 
-void fun3(int &w, int **b)
+double infi_norm(std::vector<double> a)
 {
-  **b=w;
+  double temp=0;
+  for (int i=0;i<a.size();i++)
+    {
+      if(temp<abs(a[i]))
+	{
+	  temp=abs(a[i]);
+	}
+    }
+  return temp;
 }
 
+void CG(std::vector<std::vector<double>> A, std::vector<double>& x, std::vector<double> rhs, double tol=0.001, int max_iter=10)
+{
+  int n=A.size();
+  std::vector<double> res(A.size(),0), Ap(A.size(),0), p(A.size(), 0);
+  double delta=0, beta=0;
+  //res=get_res(A,x,rhs); // res=b - Ax;
+  for(int i=0;i<n;i++)
+    {
+      double temp=0;
+      for(int j=0;j<n;j++)
+	{
+	  temp+=A[i][j]*x[j];
+	}
+      res[i]=rhs[i]-temp;
+    }
+  p=res;
+  for(int i=0;i<n;i++)
+    {
+      p[i]=-res[i];
+    }
+  //Ap=get_Ap(A,p);
+  for(int i=0;i<n;i++)
+    {
+      double tempAp=0;
+      for(int j=0;j<n;j++)
+	{
+	  tempAp+=A[i][j]*p[j];
+	}
+      Ap[i]=tempAp;
+    }
+  delta=inner(p,res)/inner(p,Ap);
+  for (int i=0;i<n;i++)
+    {
+      x[i]=x[i]+delta*p[i];
+    }
+  int iter=0;
+  while(infi_norm(res)>tol&& iter < max_iter)
+    {
+      iter++;
+      for(int i=0;i<n;i++)
+	{
+	  double temp=0;
+	  for(int j=0;j<n;j++)
+	    {
+	      temp+=A[i][j]*x[j];
+	    }
+	  res[i]=rhs[i]-temp;
+	}
+      beta=inner(res, Ap)/inner(p, Ap);
+      for(int k=0;k<p.size();k++)
+        {
+          p[k]=-res[k]+beta*p[k];
+        }
+      //get Ap;
+      for(int i=0;i<n;i++)
+	{
+	  double tempAp=0;
+	  for(int j=0;j<n;j++)
+	    {
+	      tempAp+=A[i][j]*p[j];
+	    }
+	  Ap[i]=tempAp;
+	}
+      delta=inner(p,res)/inner(p,Ap);
+
+      //get new x;
+      for (int i=0;i<n;i++)
+	{
+	  x[i]=x[i]+delta*p[i];
+	}
+      std::cout<<"This is "<<iter<<" iterations!\n"
+	       <<"x is \n";
+      for(int i=0;i<3;i++)
+	{
+	  std::cout<<x[i]<<" ";
+	}
+      std::cout<<"\n";
+    }
+}
 int main()
 {
-  int a=2312321,c=2;
-  int *b=&c;
-  //b=&a;
-  // fun3(a,&b);
-  std::cout<<*b<<std::endl;
-  CGSolver AAA;
- 
-  dealii::SparseMatrix<double> A,M;
-  // std::ofstream sparsematrix1 ("original_matrix.1");
-  //A.print(sparsematrix1);
-  /*
-  std::vector<unsigned int> row_length(10,10);
-  unsigned int t=3;
-  dealii::SparsityPattern sparsity_pattern(10,10,{2,3,3,3,3,3,3,3,3,2});
-  dealii::SparsityPattern sp2(3,3,{2,3,2});
-  sp2.add(0,1);
-  sp2.add(1,0);
-  sp2.add(1,2);
-  sp2.add(2,1);
-  sparsity_pattern.add(1,2);
-  sparsity_pattern.add(0,1);
-  sparsity_pattern.add(9,8);
-  for (int i=1;i<9;i++)
+  double tol = 1.0e-5;
+  // const int n = 3;
+  std::vector<double> x(3, 0), rhs(3, 0);
+  std::vector<std::vector<double>> A(3,x);
+  A[0][0]=2;
+  A[0][1]=-1;
+  A[1][0]=-1;
+  A[1][1]=2;
+  A[1][2]=-1;
+  A[2][1]=-1;
+  A[2][2]=2;
+  rhs[0]=1;
+  rhs[2]=1.8;
+  CG(A, x, rhs, tol);
+  std::vector<double> b;
+  b=x;
+  for(int i=0;i<b.size();i++)
     {
-      sparsity_pattern.add(i,i+1);
-      sparsity_pattern.add(i,i-1);
-    }
-  
-  A.reinit(sparsity_pattern);
-  M.reinit(sp2);
-    // In this way, I can construct a SparseMatrix to be the test data for the algorithm.
-  for (int k=0;k<A.m();k++)
-    {
-      dealii::SparseMatrix<double>::iterator i=A.begin(k);
-      i->value()=2;
-      while(i!=A.end(k))
-	{
-	  i->value()+=1;
-	  ++i;
-	}
+      std::cout<<b[i]<<std::endl;
     }
 
-      // In this way, I can construct a SparseMatrix to be the test data for the algorithm.
- 
-  for (int k=0;k<M.m();k++)
-    {
-      dealii::SparseMatrix<double>::iterator i=M.begin(k);
-      i->value()=3;
-      while(i!=M.end(k))
-	{
-	  i->value()-=1;
-	  ++i;
-	}
-    }
- 
-  std::cout<<AAA.tolerence()<<std::endl;
-  CGSolver solve(A), sol2(M);
-  std::ofstream sparsematrix2 ("sparse_matrix.2");
-  A.print(sparsematrix2);
-  std::cout<<solve.A->n()<<std::endl;
-  
-  dealii::Vector<double> x0(10),B(10), x1(3),B2(3);
-  B[0]=4;
-  for(int i=1;i<9;i++)
-    {
-      B[i]=5;
-    }
-  B[9]=4;
-  B2[0]=1;
-  B2[2]=1.8;
-  std::cout<<"test1\n";
-  solve.solve(x0,B,1.0e-12,100);
-  sol2.solve(x1,B2,1.0e-3,20);
- */ 
-  // std::cout<<(*P).n()<<std::endl;
   return 0;
 }

@@ -1,6 +1,35 @@
 #include <trace/mintrace.h>
 #include <CG/CGSolver.h>
 
+std::vector<double> multiply(const SparseMatrix<double>* A, std::vector<double> x0)
+{
+  std::vector<double> x(x0.size(),0);
+  //  std::cout<<"Flag 1!!\n";
+  //std::cout<<A.n()<<"\n";
+  
+  if (A->n()!=x0.size())
+    {
+      std::cout<<"Function multiply() ERROR: The sizes of matrix and vector are not same! Please check it!\n";
+    }
+  else
+    {
+      // std::cout<<"TEST POINT 2 \n";
+      for(int k=0;k<A->m();k++)
+	{
+	  //std::cout<<"this is the "<<k<<"th iterations \n";
+	  SparseMatrix<double>::const_iterator i=A->begin(k);
+	  
+	  while(i!=A->end(k))
+	    {
+	      x[k]+=i->value()*x0[i->column()];
+	      ++i;
+	    }
+	}
+      return x;
+    }
+}
+
+
 int main()
 {
   SparseMatrix<double> A, M;
@@ -26,7 +55,7 @@ int main()
   for (int k=0;k<A.m();k++)
     {
       SparseMatrix<double>::iterator i=A.begin(k);
-      i->value()=2;
+      i->value()=1;
       while(i!=A.end(k))
 	{
 	  i->value()+=1;
@@ -89,11 +118,30 @@ int main()
     }
   std::cout<<"\n";
 
-  std::vector<double> tempc(3,0);
-  std::vector<std::vector<double>> tempC(10,tempc);
-  tempC[0][0]=1;
-  tempC[1][1]=sqrt(2)/2;
-  tempC[2][2]=sqrt(3)/3;
+  for(int i=0;i<C.X.size();i++)
+    {
+      for(int j=0;j<C.X[0].size();j++)
+	{
+	  std::cout<<C.X[i][j]<<" ";
+	}
+      std::cout<<std::endl;
+    }
+  
+
+  C.mintrace(1,0.01,20);
+
+  //std::vector<double> tempc(3,0);
+  //std::vector<std::vector<double>> tempC(10,tempc);
+  /*
+  tempC[0][0]=0.27219;
+  tempC[0][1]=0.40825;
+  tempC[0][2]=-0.87135;
+  tempC[1][0]=-0.46837;
+  tempC[1][1]=-0.40825;
+  tempC[1][2]=-0.33758;
+  tempC[2][0]=0.40298;
+  tempC[2][1]=-0.40825;
+  tempC[2][2]=-0.06539;
   C.X=tempC;
   for(int i=0;i<C.X.size();i++)
     {
@@ -103,6 +151,9 @@ int main()
 	}
       std::cout<<std::endl;
     }
+  std::cout<<"\n";
+
+  
   std::cout<<"\n";
   C.get_MX();
   
@@ -115,6 +166,30 @@ int main()
       std::cout<<std::endl;
     }
   std::cout<<"\n";
+  
+  std::vector<double> RHS(10,0);
+  RHS[0]=  -9.9584e-17;
+  RHS[1]=    2.0913e-17;
+  RHS[2]= -2.1501e-17;
+  RHS[3]= -2.6410e-17;
+  RHS[4]=3.2734e-17;
+  RHS[5]=-9.0672e-04;
+  std::vector<double> test(10,1), test2(10,1);
+ 
+  C.get_Ap(test);
+  for(int i=0;i<test.size();i++)
+    {
+      std::cout<<C.Ap[i]<<"\n";
+    }
+	std::cout<<"\n";
+test2=multiply(C.M,test2);
+  for(int i=0;i<test.size();i++)
+    {
+      std::cout<<test2[i]<<"\n";
+    }
+  */
+
+  
   /*
   B.Householder(a);
   for(int i=0;i<a.size();i++)
@@ -146,9 +221,9 @@ int main()
     }
     */
   std::cout<<"Hello world!\n";
-  std::ofstream sparsematrix1 ("original_matrix.1");
-  A.print(sparsematrix1);
-  std::ofstream sparsematrix2 ("original_matrix.2");
-  M.print(sparsematrix2);
+  //  std::ofstream sparsematrix1 ("original_matrix.1");
+  // A.print(sparsematrix1);
+      // std::ofstream sparsematrix2 ("original_matrix.2");
+      // M.print(sparsematrix2);
   return 0;
 }

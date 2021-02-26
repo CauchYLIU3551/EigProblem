@@ -6,6 +6,82 @@
 /////////////////////////////////////////////
 // These functions can be gathered into one .cpp file after testing;
 
+// Design for return transpose matrix of A;
+void transpose(std::vector<std::vector<double>>& A)
+{
+  int n=A.size();
+  int m=A[0].size();
+    if (n < m)
+      {
+        for (int i = 0; i < n; i++)
+	  {
+            for (int j = 0; j < i; j++)
+	      {
+                double temp = A[j][i];
+                A[j][i] = A[i][j];
+                A[i][j] = temp;
+	      }
+	  }
+        for (int i = n; i < m; i++)
+	  {
+            std::vector<double> temp;
+            for (int j = 0; j < n; j++)
+	      {
+                temp.push_back(A[j][i]);
+	      }
+            A.push_back(temp);
+	  }
+        for (int i = 0; i < n; i++)
+	  {
+            for (int j = n; j < m; j++)
+	      {
+                A[i].pop_back();
+	      }
+	  }
+      }
+    else if(m<n)
+      {
+        for (int i = 0; i < m; i++)
+	  {
+            for (int j = 0; j < i; j++)
+	      {
+                double temp = A[j][i];
+                A[j][i] = A[i][j];
+		A[i][j] = temp;
+	      }
+	  }
+        for (int i = 0; i < m; i++)
+	  {
+            for (int j = m; j < n; j++)
+	      {
+                A[i].push_back(A[j][i]);
+	      }
+	  }
+
+        for (int i = m; i < n; i++)
+	  {
+            A.pop_back();
+	  }
+
+      }
+    else
+      {
+	for(int i=0;i<n;i++)
+	  {
+	    for(int j=0;j<i;j++)
+	      {
+		double temp=A[j][i];
+		A[j][i]=A[i][j];
+		A[i][j]=temp;
+	      }
+	  }
+      }
+
+    //return A;
+
+}
+
+
 // this function will turn the matrix Q into the nxn identity matrix;
 void identitymatrix(std::vector<std::vector<double>> &Q, int n)
 {
@@ -106,18 +182,124 @@ std::vector<double> multiply(const SparseMatrix<double>* A, std::vector<double> 
     }
 }
 
+// Computing matrix A times vector b, and using the A[0] to store the result and return it.
+void multiply(std::vector<std::vector<double>> A, std::vector<double> &b)
+{
+  int m=A.size();
+  int n=b.size();
+  std::vector<double>tempx(m,0);
+  for (int i=0;i<m;i++)
+    {
+      double temp=0;
+      for(int j=0;j<n;j++)
+	{
+	  temp+=A[i][j]*b[j];
+	}
+      tempx[i]=temp;
+    }
+  b.clear();
+  b=tempx;
+  //return A[0];
+}
+
 // This function computes the infi-norm of vector x;
 double infi_Norm(std::vector<double> x)
 {
   double norm=0;
   for (int i=0;i<x.size();i++)
     {
-      if (norm<abs(x[i]))
+      if (norm<fabs(x[i]))
 	{
-	  norm=abs(x[i]);
+	  norm=fabs(x[i]);
 	}
     }
   return norm;
+}
+
+//////////
+// CG mehod;
+double inner(std::vector<double> a, std::vector<double> b)
+{
+  int n=a.size();
+  double sum=0;
+  for(int i=0;i<n;i++)
+    {
+      sum+=a[i]*b[i];
+    }
+  return sum;
+}
+
+void CG(std::vector<std::vector<double>> A, std::vector<double>& x, std::vector<double> rhs, double tol=0.001, int max_iter=10)
+{
+  int n=A.size();
+  std::vector<double> res(A.size(),0), Ap(A.size(),0), p(A.size(), 0);
+  double delta=0, beta=0;
+  //res=get_res(A,x,rhs); // res=b - Ax;
+  for(int i=0;i<n;i++)
+    {
+      double temp=0;
+      for(int j=0;j<n;j++)
+	{
+	  temp+=A[i][j]*x[j];
+	}
+      res[i]=rhs[i]-temp;
+    }
+  p=res;
+  for(int i=0;i<n;i++)
+    {
+      p[i]=-res[i];
+    }
+  //Ap=get_Ap(A,p);
+  for(int i=0;i<n;i++)
+    {
+      double tempAp=0;
+      for(int j=0;j<n;j++)
+	{
+	  tempAp+=A[i][j]*p[j];
+	}
+      Ap[i]=tempAp;
+    }
+  delta=inner(p,res)/inner(p,Ap);
+  for (int i=0;i<n;i++)
+    {
+      x[i]=x[i]+delta*p[i];
+    }
+  int iter=0;
+  while(infi_Norm(res)>tol&& iter < max_iter)
+    {
+      iter++;
+      for(int i=0;i<n;i++)
+	{
+	  double temp=0;
+	  for(int j=0;j<n;j++)
+	    {
+	      temp+=A[i][j]*x[j];
+	    }
+	  res[i]=rhs[i]-temp;
+	}
+      beta=inner(res, Ap)/inner(p, Ap);
+      for(int k=0;k<p.size();k++)
+        {
+          p[k]=-res[k]+beta*p[k];
+        }
+      //get Ap;
+      for(int i=0;i<n;i++)
+	{
+	  double tempAp=0;
+	  for(int j=0;j<n;j++)
+	    {
+	      tempAp+=A[i][j]*p[j];
+	    }
+	  Ap[i]=tempAp;
+	}
+      delta=inner(p,res)/inner(p,Ap);
+
+      //get new x;
+      for (int i=0;i<n;i++)
+	{
+	  x[i]=x[i]+delta*p[i];
+	}
+    }
 }
 
 
@@ -136,8 +318,90 @@ TraceSolver::TraceSolver(const Matrix& a, const Matrix& m){
 
 void TraceSolver::rand_V(int p, std::vector<std::vector<double>>& V)
 {
+  std::vector<double> tmp(p, 0);
+  std::vector<std::vector<double>> tempV(V.size(), tmp);
+  for (int i=0;i<p;i++)
+    {
+      tempV[i][i]=sqrt(i+1)/(i+1);
+    }
+  V=tempV;
+  X=V;
 };
-void TraceSolver::get_VtAV(std::vector<std::vector<double>> V){};
+
+// Computing the matrix Vt * A *V;
+void TraceSolver::get_VtAV(std::vector<std::vector<double>>& V)
+{
+  int m=V.size();
+  int n=V[0].size();
+  std::vector<double> temp(n,0), tempAV(m,0);
+  std::vector<std::vector<double>> tempV(n, temp);
+  for(int i=0;i<n;i++)
+    {
+      for(int j=0;j<n;j++)
+	{
+	  double sum=0;
+	  for(int k=0;k<m;k++)
+	    {
+	      tempAV[k]=V[k][j];
+	    }
+	  tempAV=multiply(A,tempAV);
+	  for(int k=0;k<m;k++)
+	    {
+	      sum+=V[k][i]*tempAV[k];
+	      tempV[i][j]=sum;
+	    }
+	}
+    }
+  V.clear();
+  V=tempV;
+};
+
+// The function is used to compute the projection of v into u 
+// under M-inner-productsComputing the project of <u, v> corresponding to M;
+std::vector<double> TraceSolver::proj_M(std::vector<double> u, std::vector<double> v)
+{
+  double delta=0;
+  std::vector<double> Mv,Mu;
+  Mv=multiply(M,v);
+  Mu=multiply(M,u);
+  delta=inner(u,Mv)/inner(u,Mu);
+  for(int i=0;i<u.size();i++)
+    {
+      v[i]=delta*u[i];
+    }
+  return v;
+}
+
+// GS orthogonalize the Matrix X corresponding with matrix M;
+void TraceSolver::GS_M()
+{
+  transpose(X);
+  std::vector<std::vector<double>> tempX(X);
+  for(int i=1;i<tempX.size();i++)
+    {
+      for(int j=0;j<i;j++)
+	{
+	  std::vector<double> temp_proj;
+	  temp_proj=proj_M(X[j], tempX[i]);
+	  for(int k=0;k<tempX[0].size();k++)
+	    {
+	      X[i][k]=X[i][k]-temp_proj[k];
+	    }
+	}
+    }
+
+  for (int k=0;k<X.size();k++)
+    {
+      std::vector<double> temp_Xk;
+      temp_Xk=multiply(M,X[k]);
+      for(int i=0;i<X[0].size();i++)
+	{
+	  X[k][i]=X[k][i]/inner(X[k],temp_Xk);
+	}
+    }
+  transpose(X);
+}
+
 //void TraceSolver::Householder(std::vector<std::vector<double>> &a){};
 void TraceSolver::Householder(std::vector<std::vector<double>> &a)
 {
@@ -261,10 +525,10 @@ void TraceSolver::QR(std::vector<std::vector<double>> &a,   std::vector<std::vec
 
   for (int i=0;i<a.size()-1;i++)
     {
-      double theta=0;
+      double temp_theta=0;
       double tempa1=a[i][i],tempa2=a[i+1][i+1],tempb=a[i+1][i],tempc=a[i][i+1];
-      theta=atan(a[i+1][i]/a[i][i]);
-      double c=cos(theta), s=sin(theta);
+      temp_theta=atan(a[i+1][i]/a[i][i]);
+      double c=cos(temp_theta), s=sin(temp_theta);
 
       a[i][i]=c*tempa1+s*tempb;
       a[i][i+1]=c*tempc+s*tempa2;
@@ -348,17 +612,81 @@ void TraceSolver::get_MX()
       temp=multiply(M,temp);
       MX.push_back(temp);// so in this way, MX[i][j] = MX(j, i) in fact. Because in computing, I store the columns of M*X in every row of MX;
     }
-
 };
+
+void TraceSolver::get_Px(std::vector<double> & x)
+{
+  std::vector<double>tempx(x), MXx;
+  multiply(MX,tempx);
+  
+  // computing the (MX)t * (MX);
+  std::vector<double> temp(MX.size());
+  std::vector<std::vector<double>> MXtMX(MX.size(),temp);
+  for (int i=0;i<MX.size();i++)
+    {
+      for(int j=0;j<MX.size();j++)
+	{
+	  double sum=0;
+	  for(int k=0;k<MX[0].size();k++)
+	    {
+	      sum+=MX[i][k]*MX[j][k];
+	    }
+	  MXtMX[i][j]=sum;
+      	}
+    }
+
+  // solve the equation: (MXtMX)^-1 x = b, i.e. (MXtMX) b = x to get vector b;
+  std::vector<double> RHS(tempx);
+  double tol2=1.0e-5;
+  CG(MXtMX, tempx, RHS, tol2, tempx.size());
+  for (int i=0;i<x.size();i++)
+    {
+      double sum=0;
+      for(int j=0;j<MX.size();j++)
+	{
+	  sum+=MX[j][i]*tempx[j];
+	}
+      x[i]=x[i]-sum;
+    }
+}
 
 void TraceSolver::get_Ap(std::vector<double> p)
 {
+  // A great idea: while compute Ap, exactly (PAP)p here. There is a inverse
+  // matrix in P, but it is unnecessary to compute the inverse matrix!
+  // For B^-1 * x = b, while we know B and x, we can solve the equation:
+  // B* b = x, to get the vector b!
+  std::cout<<"This is TraceSolver::get_Ap()\n";
   
+  get_Px(p);
+  p=multiply(A, p);
+  get_Px(p);
+  Ap.reinit(p.size());
+  for(int i=0;i<Ap.size();i++)
+    {
+      Ap[i]=p[i];
+    }
 };
+
+void TraceSolver::get_res(std::vector<double> x, std::vector<double> r)
+{
+  std::cout<<"This is TraceSolver::get_res()\n";
+
+  res.reinit(x.size());
+  get_Px(x);
+  x=multiply(A,x);
+  get_Px(x);
+  for(int i=0;i<res.size();i++)
+    {
+      res[i]=r[i]-x[i];
+    }
+
+  std::cout<<"Finishing TraceSolver::get_res()\n";
+}
 
 double TraceSolver::get_residual()
 {
-  double residual=0;
+  double residual=1;
   return residual;
 }
 
@@ -366,7 +694,7 @@ double TraceSolver::get_residual()
 
 // solve function computes the smallest p eigenvalues of the Matrix A and M;
 // and the eigenvectors will be stored in the matrix X;
-void TraceSolver::solve(int p, double tol, u_int max_iter)
+void TraceSolver::mintrace(int p, double tol, u_int max_iter)
 {
   std::vector<std::vector<double>> V(A->n());
   // using rand_V function to get the initial matrix V which is orthogonal corresponding with M;
@@ -385,14 +713,40 @@ void TraceSolver::solve(int p, double tol, u_int max_iter)
 	}
       for (int i=0;i<p;i++)
 	{
-	  std::vector<double> delta(A->m(),0), rhs(A->m(),0);// using a n x 1 dimension initial vector to compute the Conjugate gradient process.
+	  std::vector<double> delta(A->m()), rhs(A->m());// using a n x 1 dimension initial vector to compute the Conjugate gradient process.
 	  //computing rhs vector!!
+	  for(int j=0;j<rhs.size();j++)
+	    {
+	      rhs[j]=X[j][i];
+	    }
+	  rhs=multiply(A, rhs);
+	  get_Px(rhs);
+	  // CGSolver::solve(delta,rhs,1.0e-3,20);
+	  solve(delta,rhs,1.0e-3,20);
+	  	  std::cout<<"flag1\n";
+	  // using delta and X to compute V_k+1 stored in V and X, then do iteration
+	  // again;
+	  // G-S orthogonormalize function to make V_k+1 is ortho by M;
 	  //
-	  //
-	  //////////////////////////////
-	  CGSolver::solve(delta,rhs,1.0e-3,20);
+	  // update the i th column of X;
+	  for(int k=0;k<delta.size();k++)
+	    {
+	      X[k][i]=X[k][i]-delta[k];
+	    }
 	}
+      	          std::cout<<"flag2\n";
+      GS_M();
+      V=X;
       iter++;
+    }
+  lambda.clear();
+  lambda.resize(p);
+  transpose(X);
+  for(int i=0;i<p;i++)
+    {
+      std::vector<double> temp_AX;
+      temp_AX=multiply(A,X[i]);
+      lambda[i]=inner(X[i],temp_AX);
     }
   
 }

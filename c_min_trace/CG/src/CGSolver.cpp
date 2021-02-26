@@ -36,13 +36,14 @@ void CGSolver::get_Ap(std::vector<double>x)
   // if Ap is std::vector, then this following two commands are useful;
   //Ap.clear();
   //Ap.resize(x.size());
+  Ap.reinit(x.size());
   if (A->n()!=Ap.size())
   {
     std::cout<<"Function multiply() ERROR: The sizes of matrix and vector are not same! Please check it!\n";
   }
   else
   {
-    //std::cout<<"TEST POINT 2 \n";
+    std::cout<<"This is CGSolver::get_Ap!!! \n";
     for(int k=0;k<A->m();k++)
       {
 	//	std::cout<<"this is the "<<k<<"th iterations \n";
@@ -69,7 +70,7 @@ void CGSolver::get_Ap(dealii::Vector<double>x)
   }
   else
   {
-    //std::cout<<"TEST POINT 2 \n";
+    std::cout<<"This is CGSolver::get_Ap!!! \n";
     for(int k=0;k<A->m();k++)
       {
 	//	std::cout<<"this is the "<<k<<"th iterations \n";
@@ -84,12 +85,13 @@ void CGSolver::get_Ap(dealii::Vector<double>x)
   }
 }
 
-void CGSolver::get_res(const std::vector<double> x, const std::vector<double> r)
+void CGSolver::get_res(std::vector<double> x, std::vector<double> r)
 {
   // if  res is std::vector, then following two commands are useful;
   // res.clear();
   //res.resize(x.size());
-
+  std::cout<<"This is CGSolver::get_res()\n";
+  res.reinit(x.size());
   for (int k=0;k<res.size();k++)
     {
       res[k]=0;
@@ -193,9 +195,9 @@ double max_norm(dealii::Vector<double> x)
   double max=0;
   for(int i=0;i<x.size();i++)
     {
-      if(max<x[i])
+      if(max<fabs(x[i]))
 	{
-	  max=x[i];
+	  max=fabs(x[i]);
 	}
     }
   return max;
@@ -204,11 +206,18 @@ double max_norm(dealii::Vector<double> x)
 
 void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double tol, int max_iter)
 {
+  std::cout<<" This is CGSolver for std!!!!\n";
+    
   Assert(is_initialized == true, ExcNotInitialized());
   if(tol==0.0)tol=toler;
+
+  std::cout<<"Begin to initialize the vector!\n";
   get_res(x,r);
   // p0=-g;
   get_Ap(res);
+
+  std::cout<<"Finish initialization!!!!!\n";
+  
   double beta=0;
   double delta=0;
   //beta=inner_product(res,Ap)/inner_product(res,Ap);
@@ -259,6 +268,8 @@ void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double
 
 void CGSolver::solve(dealii::Vector<double>& x, const dealii::Vector<double>& r, double tol, int max_iter)
 {
+  std::cout<<" This is CGSolver for dealii !!!!\n";
+  
   Assert(is_initialized == true, ExcNotInitialized());
   if(tol==0.0)tol=toler;
   get_res(x,r);

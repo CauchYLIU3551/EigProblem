@@ -25,11 +25,11 @@ class CGSolver
   void clear();
 
   // compute the value of matrix A times p;
-  void get_Ap(std::vector<double>x);
-  void get_Ap(dealii::Vector<double>x);
+  virtual void get_Ap(std::vector<double>x);
+  virtual void get_Ap(dealii::Vector<double>x);
   // compute the residual of the equation Ax=r i.e. res= r-Ax;
-  void get_res(const std::vector<double> x, const std::vector<double> r);
-  void get_res(const dealii::Vector<double> x, const dealii::Vector<double> r);
+  virtual void get_res(std::vector<double> x, std::vector<double> r);
+  virtual void get_res(const dealii::Vector<double> x, const dealii::Vector<double> r);
   double tolerence()const {return toler;};
 
   // solve the equation: Ax=r, to get the x which can satisfy the tolerence;
