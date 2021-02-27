@@ -1,4 +1,5 @@
-p=1;
+n=10;
+p=2;
 max_iter=1;
 tol=0.01;
 A=diag(2*ones(10,1));
@@ -29,8 +30,9 @@ for k=1:max_iter
     ## Rayleigh quotient minimization algorithm!
     ####x=PCG(P*(A-theta(i,i)*M)*P,P*R*e(:,i),x);
     #x=CG(P*(A-theta(i,i)*M)*P,P*R*e(:,i),x);
-    %A*X*e(:,i)
-    %P*A*X*e(:,i)
+    X*e(:,i)
+    tempAX=A*X*e(:,i)
+    tempPAX=P*A*X*e(:,i)
     %a=X'*M*ones(10,1)
    % b=(X'*M*M*X)
     %x
@@ -38,13 +40,11 @@ for k=1:max_iter
     
 
     x=CG(P*A*P,P*A*X*e(:,i),x);
-    x
     delta(:,i)=x;
     X(:,i)=X(:,i)-x;
   end
-
   #V=M_GS(X,R);
   V=M_GS(X,M);
-end
+  end
 
 eigenvalue=diag(X'*A*X);

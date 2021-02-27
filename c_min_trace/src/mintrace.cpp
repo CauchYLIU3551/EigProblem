@@ -433,13 +433,18 @@ void TraceSolver::GS_M()
 	}
     }
 
+  std::cout<<"This is the matrix X during the GS_M process\n";
+  show_matrix(X);
+
   for (int k=0;k<X.size();k++)
     {
       std::vector<double> temp_Xk;
       temp_Xk=multiply(M,X[k]);
+      double norm=0;
+      norm=sqrt(inner(X[k],temp_Xk));
       for(int i=0;i<X[0].size();i++)
 	{
-	  X[k][i]=X[k][i]/inner(X[k],temp_Xk);
+	  X[k][i]=X[k][i]/norm;
 	}
     }
   transpose(X);
@@ -450,11 +455,13 @@ void TraceSolver::Householder(std::vector<std::vector<double>> &a)
 {
   //initialize the matrix X
   std::vector<double> temp(a.size(),0);
-  X.resize(a.size(),temp);// just for test this function, will be deleted after debug;
-  for(int j=0;j<X.size();j++)
-    {
-      X[j][j]=1;
-    }
+  // std::vector<std::vector<double>> tempX;
+  // identity_matrix(tempX);
+  //X.resize(a.size(),temp);// just for test this function, will be deleted after debug;
+  // for(int j=0;j<X.size();j++)
+  //  {
+      //    X[j][j]=1;
+  //  }
   int n=a.size();
   std::vector<std::vector<double>> Pk;
 
@@ -565,6 +572,10 @@ void TraceSolver::Householder(std::vector<std::vector<double>> &a)
 void TraceSolver::QR(std::vector<std::vector<double>> &a,   std::vector<std::vector<double>>& Q)
 {
   int n=a.size();
+    std::cout<<"The matrix Qk before QR is ::::::::::!!!!!!!!!!!\n";
+  show_matrix(Q);
+    std::cout<<"The matrix a before QR is ::::::::::!!!!!!!!!!!\n";
+  show_matrix(a);
 
   for (int i=0;i<a.size()-1;i++)
     {
@@ -594,6 +605,10 @@ void TraceSolver::QR(std::vector<std::vector<double>> &a,   std::vector<std::vec
 	}
       
     }
+  std::cout<<"The matrix Qk in QR is ::::::::::!!!!!!!!!!!\n";
+  show_matrix(Q);
+    std::cout<<"The matrix aQk in QR is ::::::::::!!!!!!!!!!!\n";
+  show_matrix(a);
   //multiply(X,Q); this update the X=V*Qk but in QR factorization, it does not contain this command;
   //multiply(a,Q); this update a=RQ, because after this QR function, a=R, after this command, a=RQ;
 }
@@ -615,13 +630,15 @@ void TraceSolver::QRSolver(std::vector<std::vector<double>> &a, double tol)
     }
 
   int num=0;
-  while (infi_Norm(b)>tol&&num<1000)
+  while (infi_Norm(b)>tol&&num<1)
     {
       num++;
 
       b.clear();
 
       Householder(a);
+      	     std::cout<<"The matrix X after householder is :::::::::::::\n";
+	     show_matrix(X);
       
       identitymatrix(Qk,n);
 
@@ -629,6 +646,8 @@ void TraceSolver::QRSolver(std::vector<std::vector<double>> &a, double tol)
      
       // Compute the num-th iteration, get the Qk in this step;
       multiply(X,Qk);
+      	     std::cout<<"The matrix X after QR is :::::::::::::\n";
+	     show_matrix(X);
       // compute R*Q beacuse I store the R(computed above) into A, So I directly use multiply
       // function to get A*Q into A=RQ.
       multiply(a,Qk);
@@ -661,18 +680,16 @@ void TraceSolver::get_Px(std::vector<double> & x)
 {
   std::cout<<"Entering get_Px()!!!!!!!!!!!!!!!!!!!!!!\n";
   std::vector<double>tempx(x), MXx;
-  std::cout<<"This x\n";
-  show_vector(x);
-  std::cout<<"This is tempx !!!!!!!!\n";
-  show_vector(tempx);
-  //std::cout<<"This is MX\n";
+     std::cout<<"This x #!##!#!#!#!#!#!#\n";
+    show_vector(x);
+    //std::cout<<"This is MX\n";
 
   multiply(MX,tempx);
-  //  std::cout<<"This is tempx times MX\n";
-  //show_vector(tempx);
-  // computing the (MX)t * (MX);
-  //std::cout<<"This is matrix MX\n";
-  //  show_matrix(MX);
+    //  std::cout<<"This is tempx times MX\n";
+    //show_vector(tempx);
+// computing the (MX)t * (MX);
+    std::cout<<"This is matrix MX\n";
+    show_matrix(MX);
   std::vector<double> temp(MX.size());
   std::vector<std::vector<double>> MXtMX(MX.size(),temp);
   for (int i=0;i<MX.size();i++)
@@ -687,17 +704,17 @@ void TraceSolver::get_Px(std::vector<double> & x)
 	  MXtMX[i][j]=sum;
       	}
     }
-  std::cout<<"This is MXtMX\n";
-  show_matrix(MXtMX);
+  //  std::cout<<"This is MXtMX\n";
+  //show_matrix(MXtMX);
 
   // solve the equation: (MXtMX)^-1 x = b, i.e. (MXtMX) b = x to get vector b;
   std::vector<double> RHS(tempx);
   tempx.clear();
   tempx.resize(RHS.size(),0);
-  std::cout<<"This is tempx.resize()\n";
-  show_vector(tempx);
-  std::cout<<"This is vector RHS\n";
-  show_vector(RHS);
+  // std::cout<<"This is tempx.resize()\n";
+  //show_vector(tempx);
+  // std::cout<<"This is vector RHS\n";
+  //show_vector(RHS);
   double tol2=1.0e-5;
   CG(MXtMX, tempx, RHS, tol2, tempx.size());
   for (int i=0;i<x.size();i++)
@@ -710,10 +727,10 @@ void TraceSolver::get_Px(std::vector<double> & x)
       x[i]=x[i]-sum;
     }
 
-  std::cout<<"This is vector x after compute!!!\n";
-  show_vector(x);
-  std::cout<<std::endl
-	   <<std::endl;
+  // std::cout<<"This is vector x after compute!!!\n";
+  // show_vector(x);
+  //std::cout<<std::endl;
+    //<<std::endl;
 }
 
 void TraceSolver::get_Ap(std::vector<double> p)
@@ -738,21 +755,21 @@ void TraceSolver::get_Ap(std::vector<double> p)
 
 void TraceSolver::get_res(std::vector<double> x, std::vector<double> r)
 {
-  std::cout<<"This is TraceSolver::get_res()\n";
+  // std::cout<<"This is TraceSolver::get_res()\n";
 
   res.reinit(x.size());
-  std::cout<<"This is x\n";
-  show_vector(x);
+  // std::cout<<"This is x\n";
+  // show_vector(x);
   std::vector<double> tempx(x);
   get_Px(tempx);
-  std::cout<<"This is Px\n";
-  show_vector(tempx);
+  // std::cout<<"This is Px\n";
+  // show_vector(tempx);
   tempx=multiply(A,tempx);
-  std::cout<<"This is APx\n";
-  show_vector(tempx);
+  // std::cout<<"This is APx\n";
+  // show_vector(tempx);
   get_Px(tempx);
-  std::cout<<"This is PAPx\n";
-  show_vector(tempx);
+  // std::cout<<"This is PAPx\n";
+  // show_vector(tempx);
   for(int i=0;i<res.size();i++)
     {
       res[i]=r[i]-tempx[i];
@@ -776,14 +793,21 @@ void TraceSolver::mintrace(int p, double tol, u_int max_iter)
   std::vector<std::vector<double>> V(A->n());
   // using rand_V function to get the initial matrix V which is orthogonal corresponding with M;
   rand_V(p, V);// at this time it will send X = V; cause X=VU;
-  get_MX();
+  //get_MX();
   int iter = 0;
   while(iter<max_iter)
     {
+      get_MX();
+      	     std::cout<<"The matrix X is :::::::::::::\n";
+	     show_matrix(X);
       get_VtAV(V);
+      	     std::cout<<"The matrix X is :::::::::::::\n";
+	     show_matrix(X);
       QRSolver(V);// return the diagonal entries of VtAV in theta and the V_k* U_k stored in X;
       //Householder(V);//this function will return the tridiagonal function in V and the Householder matrices stored in X;
       //QR(V);
+      	     std::cout<<"The matrix X is :::::::::::::\n";
+	     show_matrix(X);
       double residual=get_residual();
       if (residual<tol)
 	{
@@ -791,25 +815,30 @@ void TraceSolver::mintrace(int p, double tol, u_int max_iter)
 	}
       for (int i=0;i<p;i++)
 	{
+	     std::cout<<"The matrix X is :::::::::::::\n";
+	     show_matrix(X);
 	  std::vector<double> delta(A->m(),0), rhs(A->m(),0);// using a n x 1 dimension initial vector to compute the Conjugate gradient process.
 	  //computing rhs vector!!
 	  for(int j=0;j<rhs.size();j++)
 	    {
 	      rhs[j]=X[j][i];
 	    }
+	  std::cout<<"X*e::::::::::"<<i+1<<std::endl;
+	  show_vector(rhs);
+	  
 	  rhs=multiply(A, rhs);
-	  // std::cout<<"This is A*X[i]\n";
-	  // show_vector(rhs);
+	     std::cout<<"This is A*X[i]\n";
+	      show_vector(rhs);
 	  get_Px(rhs);
-	  //std::cout<<"This is P*A*X[i]\n";
-	  // show_vector(rhs);
+	    std::cout<<"This is P*A*X[i]\n";
+	     show_vector(rhs);
 	 
-		  std::cout<<"This is the initial vector delta\n";
-	  show_vector(delta);
+	  std::cout<<"This is the initial vector delta for "<<i+1<<" test!!@#@!#@!#@!#@!#@!#!@#\n";
+	    show_vector(delta);
 	  solve(delta,rhs,1.0e-3,20);
 	  	  std::cout<<"flag1\n";
 		  
-		  std::cout<<"This is the solution vector delta\n";
+	  	  std::cout<<"This is the solution vector delta\n";
 	  show_vector(delta);
 	  // using delta and X to compute V_k+1 stored in V and X, then do iteration
 	  // again;
@@ -820,10 +849,16 @@ void TraceSolver::mintrace(int p, double tol, u_int max_iter)
 	    {
 	      X[k][i]=X[k][i]-delta[k];
 	    }
+	  std::cout<<"This is the "<<i<<" th test!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
 	}
-      	          std::cout<<"flag2\n";
+      std::cout<<"flag2\n";
+      //// std::cout<<"This is the X_k+1\n";
+      ////  show_matrix(X);
       GS_M();
+      //// std::cout<<"This is the matrix X after GS_M\n";
+      //// show_matrix(X);
       V=X;
+      std::cout<<"The "<<iter+1<<" th iteration finished!!!!!!!!!!!!!!!!!\n";
       iter++;
     }
   lambda.clear();

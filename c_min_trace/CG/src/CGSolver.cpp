@@ -212,6 +212,18 @@ void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double
   if(tol==0.0)tol=toler;
 
   std::cout<<"Begin to initialize the vector!\n";
+  std::cout<<"The vector x is \n";
+  for(int i=0;i<x.size();i++)
+    {
+      std::cout<<x[i]<<" ";
+    }
+  std::cout<<std::endl;
+  std::cout<<"The vector rhs is \n";
+  for (int i=0;i<r.size();i++)
+    {
+      std::cout<<r[i]<<" ";
+    }
+  std::cout<<std::endl;
   get_res(x,r);
   std::cout<<"print the vector res!!\n";
   for(int i=0;i<res.size();i++)
