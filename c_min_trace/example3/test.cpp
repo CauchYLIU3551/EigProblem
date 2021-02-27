@@ -1,6 +1,23 @@
 #include <trace/mintrace.h>
 #include <CG/CGSolver.h>
-
+void multiply(std::vector<std::vector<double>> A, std::vector<double> &b)
+{
+  int m=A.size();
+  int n=b.size();
+  std::vector<double>tempx(m,0);
+  for (int i=0;i<m;i++)
+    {
+      double temp=0;
+      for(int j=0;j<n;j++)
+	{
+	  temp+=A[i][j]*b[j];
+	}
+      tempx[i]=temp;
+    }
+  b.clear();
+  b=tempx;
+  //return A[0];
+}
 std::vector<double> multiply(const SparseMatrix<double>* A, std::vector<double> x0)
 {
   std::vector<double> x(x0.size(),0);
@@ -96,7 +113,7 @@ int main()
   a[3][1]=1;
   a[3][2]=-2;
   a[3][3]=-1;
-
+  /*
   for(int i=0;i<a.size();i++)
     {
       for(int j=0;j<a.size();j++)
@@ -117,7 +134,12 @@ int main()
       std::cout<<std::endl;
     }
   std::cout<<"\n";
+  */
 
+  std::vector<double> testx(10,1);
+  std::vector<std::vector<double>>V;
+  // C.rand_V(1, V);
+  /*  std::cout<<"This is C.X\n";
   for(int i=0;i<C.X.size();i++)
     {
       for(int j=0;j<C.X[0].size();j++)
@@ -126,10 +148,37 @@ int main()
 	}
       std::cout<<std::endl;
     }
+  std::cout<<std::endl;
+  std::cout<<"This is C.MX\n";
+  for(int i=0;i<C.X.size();i++)
+    {
+      for(int j=0;j<C.X[0].size();j++)
+	{
+	  std::cout<<C.MX[i][j]<<" ";
+	}
+      std::cout<<std::endl;
+    }
+    std::cout<<std::endl;*/
+  // C.get_MX();
+    //C.get_Px(testx);
+/*
+  for(int j=0;j<testx.size();j++)
+    {
+      std::cout<<testx[j]<<" ";
+    }*/
+
   
+  C.mintrace(1,0.01,1);
+  std::cout<<"This is the eigenvalues of AX=lambda Mx;\n";
+  for (int i=0;i<C.lambda.size();i++)
+    {
+      std::cout<<C.lambda[i]<<std::endl;
+    }
+  std::cout<<"\n";
+  
+      
 
-  C.mintrace(1,0.01,20);
-
+      
   //std::vector<double> tempc(3,0);
   //std::vector<std::vector<double>> tempC(10,tempc);
   /*
@@ -219,7 +268,12 @@ test2=multiply(C.M,test2);
 	}
       std::cout<<std::endl;
     }
-    */
+  */
+  std::vector<double> testvec(4,1);
+  multiply(a,testvec);
+  for(int i=0;i<testvec.size();i++)
+    { std::cout<<testvec[i]<<" ";}
+  std::cout<<"\n";
   std::cout<<"Hello world!\n";
   //  std::ofstream sparsematrix1 ("original_matrix.1");
   // A.print(sparsematrix1);

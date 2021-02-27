@@ -1,16 +1,6 @@
-% This is a test example for trace minimization problem;
-% It will solve the generalized eigenvalue problem such as:
-% Ax=lambda M x; 
-% By the theorem of the trace minimization, we can get the p smallest eigenvalues
-% of the matrix A corresponding to M. So this .m file will implement that.
-% Input: matrix A and the related matrix M, the number of the eigenvalues to 
-%        solve;
-% Output: the summand of the p eigenvalues;
-
-n=10;
-p=3;
-max_iter=10;
-tol=10^-5;
+p=1;
+max_iter=1;
+tol=0.01;
 A=diag(2*ones(10,1));
 A=A+diag(ones(9,1),-1)+diag(ones(9,1),1);
 M=diag([1,2,3,4,5,6,7,8,9,10]);
@@ -39,7 +29,16 @@ for k=1:max_iter
     ## Rayleigh quotient minimization algorithm!
     ####x=PCG(P*(A-theta(i,i)*M)*P,P*R*e(:,i),x);
     #x=CG(P*(A-theta(i,i)*M)*P,P*R*e(:,i),x);
+    %A*X*e(:,i)
+    %P*A*X*e(:,i)
+    %a=X'*M*ones(10,1)
+   % b=(X'*M*M*X)
+    %x
+    %P*ones(10,1)
+    
+
     x=CG(P*A*P,P*A*X*e(:,i),x);
+    x
     delta(:,i)=x;
     X(:,i)=X(:,i)-x;
   end

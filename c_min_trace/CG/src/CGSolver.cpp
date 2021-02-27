@@ -213,10 +213,24 @@ void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double
 
   std::cout<<"Begin to initialize the vector!\n";
   get_res(x,r);
+  std::cout<<"print the vector res!!\n";
+  for(int i=0;i<res.size();i++)
+    {
+      std::cout<<res[i]<<" ";
+    }
+  std::cout<<std::endl;
   // p0=-g;
-  get_Ap(res);
+  std::cout<<"Get the get_Ap()\n";
+  std::vector<double> temp_res(res.size());
+  for(int i=0;i<res.size();i++)
+    {
+      temp_res[i]=res[i];
+    }
+  get_Ap(temp_res);
 
   std::cout<<"Finish initialization!!!!!\n";
+
+ 
   
   double beta=0;
   double delta=0;
@@ -227,22 +241,55 @@ void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double
     {
       p[k]=-res[k];
     }
+  std::cout<<"Attention::::: This is vector p!!!!\n";
   get_Ap(p);
+  std::cout<<"Output Ap\n";
+  for(int i=0;i<Ap.size();i++)
+    {
+      std::cout<<Ap[i]<<" ";
+    }
+  std::cout<<std::endl;
+  
+  
+  std::cout<<"This is the first p\n";
+  for(int i=0;i<p.size();i++)
+    {
+      std::cout<<p[i]<<" ";
+    }
+  std::cout<<std::endl;
+  std::cout<<"This is the first Ap\n";
+  for(int i=0;i<Ap.size();i++)
+    {
+      std::cout<<Ap[i]<<" ";
+    }
+  std::cout<<"\n";
   delta=inner_product(p,res)/inner_product(p,Ap);
-
+  std::cout<<"The first delta is !!!!!!::::::"<<delta<<"\n";
   // update vector x for the first iteration;
   for(int k=0;k<x.size();k++)
     {
       x[k]=x[k]+delta*p[k];
     }
+  std::cout<<"This is the first x!!!@@@@@@@@@@\n";
+  for(int i=0;i<x.size();i++)
+    {
+      std::cout<<x[i]<<" ";
+    }
+  std::cout<<"AAAAA\n\n";
 
   int iter=1;
-
+  get_res(x,r);
+  std::cout<<"This is the initial res!!##@#@#@#!#!#\n";
+  for(int i=0;i<res.size();i++)
+    {
+      std::cout<<res[i]<<" "; 
+    }
+  std::cout<<std::endl;
   // in this iteration the extinction condition;
   // the max_norm can be replaced by frobenius_norm;
   while(iter<=max_iter&& max_norm(res)>tol)
     {
-      get_res(x,r);
+      //get_res(x,r);
       beta=inner_product(res,Ap)/inner_product(p,Ap);
       //beta=-beta;
       for(int k=0;k<p.size();k++)
@@ -260,7 +307,7 @@ void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double
 	{
 	  x[k]=x[k]+delta*p[k];
 	}
-
+     get_res(x,r);
       iter++;
     }
  
@@ -293,14 +340,14 @@ void CGSolver::solve(dealii::Vector<double>& x, const dealii::Vector<double>& r,
     {
       x[k]=x[k]+delta*p[k];
     }
-
+  get_res(x,r);
   int iter=1;
 
   // in this iteration the extinction condition;
   // the max_norm can be replaced by frobenius_norm;
   while(iter<=max_iter&& max_norm(res)>tol)
     {
-      get_res(x,r);
+
       beta=inner_product(res,Ap)/inner_product(p,Ap);
       //beta=-beta;
       for(int k=0;k<p.size();k++)
@@ -318,6 +365,7 @@ void CGSolver::solve(dealii::Vector<double>& x, const dealii::Vector<double>& r,
 	{
 	  x[k]=x[k]+delta*p[k];
 	}
+      get_res(x,r);
 
       iter++;
     }

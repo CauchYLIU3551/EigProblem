@@ -26,15 +26,16 @@ function x = CG (A, b, x0)
   x=x0;
   g=b-A*x;
   p=-g;
+  %test=A*p
   delta=p'*g/(p'*A*p);
   x=x+delta*p;
-  
+  g=b-A*x;
   while norm(g)>10^-2
-    g=b-A*x;
     beta=g'*A*p/(p'*A*p);
     p=-g+beta*p;
     delta=p'*g/(p'*A*p);
     x=x+delta*p;
+    g=b-A*x;
    end
 
 endfunction

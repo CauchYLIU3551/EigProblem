@@ -60,7 +60,8 @@ class TraceSolver:public CGSolver
   std::vector<double> theta;// storing the diagonal entries of the QR factorization and maybe used
   // as shift in future advancing function.
   std::vector<double> lambda; // storing the eigenvalues;
-
+  //std::vector<double> Ap;
+  //std::vector<double> res;
 };
 
 #endif

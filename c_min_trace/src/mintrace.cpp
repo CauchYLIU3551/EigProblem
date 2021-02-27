@@ -6,6 +6,28 @@
 /////////////////////////////////////////////
 // These functions can be gathered into one .cpp file after testing;
 
+void show_vector(std::vector<double> a)
+{
+  for (int i=0;i<a.size();i++)
+    {
+      std::cout<<a[i]<<" ";
+    }
+  std::cout<<std::endl;
+}
+
+void show_matrix(std::vector<std::vector<double>> A)
+{
+  for(int i=0;i<A.size();i++)
+    {
+      for(int j=0;j<A[0].size();j++)
+	{
+	  std::cout<<A[i][j]<<" ";
+	}
+      std::cout<<std::endl;
+    }
+      std::cout<<std::endl;
+}
+
 // Design for return transpose matrix of A;
 void transpose(std::vector<std::vector<double>>& A)
 {
@@ -249,7 +271,13 @@ void CG(std::vector<std::vector<double>> A, std::vector<double>& x, std::vector<
     {
       p[i]=-res[i];
     }
-  //Ap=get_Ap(A,p);
+  
+  if (infi_Norm(p)<tol)
+    {
+      return;
+    }
+
+    //Ap=get_Ap(A,p);
   for(int i=0;i<n;i++)
     {
       double tempAp=0;
@@ -265,18 +293,21 @@ void CG(std::vector<std::vector<double>> A, std::vector<double>& x, std::vector<
       x[i]=x[i]+delta*p[i];
     }
   int iter=0;
+  
+  // res=b - Ax;
+  for(int i=0;i<n;i++)
+    {
+      double temp=0;
+      for(int j=0;j<n;j++)
+	{
+	  temp+=A[i][j]*x[j];
+	}
+      res[i]=rhs[i]-temp;
+    }
   while(infi_Norm(res)>tol&& iter < max_iter)
     {
       iter++;
-      for(int i=0;i<n;i++)
-	{
-	  double temp=0;
-	  for(int j=0;j<n;j++)
-	    {
-	      temp+=A[i][j]*x[j];
-	    }
-	  res[i]=rhs[i]-temp;
-	}
+
       beta=inner(res, Ap)/inner(p, Ap);
       for(int k=0;k<p.size();k++)
         {
@@ -299,6 +330,16 @@ void CG(std::vector<std::vector<double>> A, std::vector<double>& x, std::vector<
 	{
 	  x[i]=x[i]+delta*p[i];
 	}
+
+      for(int i=0;i<n;i++)
+	{
+	  double temp=0;
+	  for(int j=0;j<n;j++)
+	    {
+	      temp+=A[i][j]*x[j];
+	    }
+	  res[i]=rhs[i]-temp;
+	}
     }
 }
 
@@ -318,14 +359,16 @@ TraceSolver::TraceSolver(const Matrix& a, const Matrix& m){
 
 void TraceSolver::rand_V(int p, std::vector<std::vector<double>>& V)
 {
+  //std::cout<<"Begin initialize V and X!\n";
   std::vector<double> tmp(p, 0);
-  std::vector<std::vector<double>> tempV(V.size(), tmp);
+  std::vector<std::vector<double>> tempV(A->m(), tmp);
   for (int i=0;i<p;i++)
     {
       tempV[i][i]=sqrt(i+1)/(i+1);
     }
   V=tempV;
   X=V;
+  //std::cout<<"finish rand_V()\n";
 };
 
 // Computing the matrix Vt * A *V;
@@ -616,10 +659,20 @@ void TraceSolver::get_MX()
 
 void TraceSolver::get_Px(std::vector<double> & x)
 {
+  std::cout<<"Entering get_Px()!!!!!!!!!!!!!!!!!!!!!!\n";
   std::vector<double>tempx(x), MXx;
+  std::cout<<"This x\n";
+  show_vector(x);
+  std::cout<<"This is tempx !!!!!!!!\n";
+  show_vector(tempx);
+  //std::cout<<"This is MX\n";
+
   multiply(MX,tempx);
-  
+  //  std::cout<<"This is tempx times MX\n";
+  //show_vector(tempx);
   // computing the (MX)t * (MX);
+  //std::cout<<"This is matrix MX\n";
+  //  show_matrix(MX);
   std::vector<double> temp(MX.size());
   std::vector<std::vector<double>> MXtMX(MX.size(),temp);
   for (int i=0;i<MX.size();i++)
@@ -634,9 +687,17 @@ void TraceSolver::get_Px(std::vector<double> & x)
 	  MXtMX[i][j]=sum;
       	}
     }
+  std::cout<<"This is MXtMX\n";
+  show_matrix(MXtMX);
 
   // solve the equation: (MXtMX)^-1 x = b, i.e. (MXtMX) b = x to get vector b;
   std::vector<double> RHS(tempx);
+  tempx.clear();
+  tempx.resize(RHS.size(),0);
+  std::cout<<"This is tempx.resize()\n";
+  show_vector(tempx);
+  std::cout<<"This is vector RHS\n";
+  show_vector(RHS);
   double tol2=1.0e-5;
   CG(MXtMX, tempx, RHS, tol2, tempx.size());
   for (int i=0;i<x.size();i++)
@@ -648,6 +709,11 @@ void TraceSolver::get_Px(std::vector<double> & x)
 	}
       x[i]=x[i]-sum;
     }
+
+  std::cout<<"This is vector x after compute!!!\n";
+  show_vector(x);
+  std::cout<<std::endl
+	   <<std::endl;
 }
 
 void TraceSolver::get_Ap(std::vector<double> p)
@@ -656,9 +722,11 @@ void TraceSolver::get_Ap(std::vector<double> p)
   // matrix in P, but it is unnecessary to compute the inverse matrix!
   // For B^-1 * x = b, while we know B and x, we can solve the equation:
   // B* b = x, to get the vector b!
-  std::cout<<"This is TraceSolver::get_Ap()\n";
+  //std::cout<<"This is TraceSolver::get_Ap()\n";
   
   get_Px(p);
+  //std::cout<<"This is Px\n";
+  //show_vector(p);
   p=multiply(A, p);
   get_Px(p);
   Ap.reinit(p.size());
@@ -673,15 +741,24 @@ void TraceSolver::get_res(std::vector<double> x, std::vector<double> r)
   std::cout<<"This is TraceSolver::get_res()\n";
 
   res.reinit(x.size());
-  get_Px(x);
-  x=multiply(A,x);
-  get_Px(x);
+  std::cout<<"This is x\n";
+  show_vector(x);
+  std::vector<double> tempx(x);
+  get_Px(tempx);
+  std::cout<<"This is Px\n";
+  show_vector(tempx);
+  tempx=multiply(A,tempx);
+  std::cout<<"This is APx\n";
+  show_vector(tempx);
+  get_Px(tempx);
+  std::cout<<"This is PAPx\n";
+  show_vector(tempx);
   for(int i=0;i<res.size();i++)
     {
-      res[i]=r[i]-x[i];
+      res[i]=r[i]-tempx[i];
     }
 
-  std::cout<<"Finishing TraceSolver::get_res()\n";
+  // std::cout<<"Finishing TraceSolver::get_res()\n";
 }
 
 double TraceSolver::get_residual()
@@ -699,6 +776,7 @@ void TraceSolver::mintrace(int p, double tol, u_int max_iter)
   std::vector<std::vector<double>> V(A->n());
   // using rand_V function to get the initial matrix V which is orthogonal corresponding with M;
   rand_V(p, V);// at this time it will send X = V; cause X=VU;
+  get_MX();
   int iter = 0;
   while(iter<max_iter)
     {
@@ -713,17 +791,26 @@ void TraceSolver::mintrace(int p, double tol, u_int max_iter)
 	}
       for (int i=0;i<p;i++)
 	{
-	  std::vector<double> delta(A->m()), rhs(A->m());// using a n x 1 dimension initial vector to compute the Conjugate gradient process.
+	  std::vector<double> delta(A->m(),0), rhs(A->m(),0);// using a n x 1 dimension initial vector to compute the Conjugate gradient process.
 	  //computing rhs vector!!
 	  for(int j=0;j<rhs.size();j++)
 	    {
 	      rhs[j]=X[j][i];
 	    }
 	  rhs=multiply(A, rhs);
+	  // std::cout<<"This is A*X[i]\n";
+	  // show_vector(rhs);
 	  get_Px(rhs);
-	  // CGSolver::solve(delta,rhs,1.0e-3,20);
+	  //std::cout<<"This is P*A*X[i]\n";
+	  // show_vector(rhs);
+	 
+		  std::cout<<"This is the initial vector delta\n";
+	  show_vector(delta);
 	  solve(delta,rhs,1.0e-3,20);
 	  	  std::cout<<"flag1\n";
+		  
+		  std::cout<<"This is the solution vector delta\n";
+	  show_vector(delta);
 	  // using delta and X to compute V_k+1 stored in V and X, then do iteration
 	  // again;
 	  // G-S orthogonormalize function to make V_k+1 is ortho by M;
