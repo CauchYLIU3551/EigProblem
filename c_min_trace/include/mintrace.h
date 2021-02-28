@@ -40,7 +40,7 @@ class TraceSolver:public CGSolver
   void Householder(std::vector<std::vector<double>> &a);
   void QR(std::vector<std::vector<double>> &a, std::vector<std::vector<double>>& Q);
   void get_VtAV(std::vector<std::vector<double>>& a);
-  void QRSolver(std::vector<std::vector<double>>& a, double tol=1.0e-3);
+  void QRSolver(std::vector<std::vector<double>>& a, double tol=1.0e-9);
   double get_residual();
   void get_MX();
   std::vector<double> proj_M(std::vector<double> u, std::vector<double> v);

@@ -43,7 +43,7 @@ void CGSolver::get_Ap(std::vector<double>x)
   }
   else
   {
-    std::cout<<"This is CGSolver::get_Ap!!! \n";
+    //std::cout<<"This is CGSolver::get_Ap!!! \n";
     for(int k=0;k<A->m();k++)
       {
 	//	std::cout<<"this is the "<<k<<"th iterations \n";
@@ -90,7 +90,7 @@ void CGSolver::get_res(std::vector<double> x, std::vector<double> r)
   // if  res is std::vector, then following two commands are useful;
   // res.clear();
   //res.resize(x.size());
-  std::cout<<"This is CGSolver::get_res()\n";
+  //std::cout<<"This is CGSolver::get_res()\n";
   res.reinit(x.size());
   for (int k=0;k<res.size();k++)
     {
@@ -206,33 +206,33 @@ double max_norm(dealii::Vector<double> x)
 
 void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double tol, int max_iter)
 {
-  std::cout<<" This is CGSolver for std!!!!\n";
+  // std::cout<<" This is CGSolver for std!!!!\n";
     
   Assert(is_initialized == true, ExcNotInitialized());
   if(tol==0.0)tol=toler;
 
-  std::cout<<"Begin to initialize the vector!\n";
-  std::cout<<"The vector x is \n";
-  for(int i=0;i<x.size();i++)
-    {
-      std::cout<<x[i]<<" ";
-    }
-  std::cout<<std::endl;
-  std::cout<<"The vector rhs is \n";
-  for (int i=0;i<r.size();i++)
-    {
-      std::cout<<r[i]<<" ";
-    }
-  std::cout<<std::endl;
+  // std::cout<<"Begin to initialize the vector!\n";
+  // std::cout<<"The vector x is \n";
+  //  for(int i=0;i<x.size();i++)
+  //   {
+  //     std::cout<<x[i]<<" ";
+  //    }
+  // std::cout<<std::endl;
+  // std::cout<<"The vector rhs is \n";
+  //  for (int i=0;i<r.size();i++)
+  //   {
+  //     std::cout<<r[i]<<" ";
+  //   }
+  //  std::cout<<std::endl;
   get_res(x,r);
-  std::cout<<"print the vector res!!\n";
-  for(int i=0;i<res.size();i++)
-    {
-      std::cout<<res[i]<<" ";
-    }
-  std::cout<<std::endl;
+  //  std::cout<<"print the vector res!!\n";
+  //  for(int i=0;i<res.size();i++)
+  //   {
+  //     std::cout<<res[i]<<" ";
+  //    }
+  //  std::cout<<std::endl;
   // p0=-g;
-  std::cout<<"Get the get_Ap()\n";
+  // std::cout<<"Get the get_Ap()\n";
   std::vector<double> temp_res(res.size());
   for(int i=0;i<res.size();i++)
     {
@@ -240,7 +240,7 @@ void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double
     }
   get_Ap(temp_res);
 
-  std::cout<<"Finish initialization!!!!!\n";
+  // std::cout<<"Finish initialization!!!!!\n";
 
  
   
@@ -253,50 +253,32 @@ void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double
     {
       p[k]=-res[k];
     }
-  std::cout<<"Attention::::: This is vector p!!!!\n";
+  // std::cout<<"Attention::::: This is vector p!!!!\n";
   get_Ap(p);
-  std::cout<<"Output Ap\n";
-  for(int i=0;i<Ap.size();i++)
-    {
-      std::cout<<Ap[i]<<" ";
-    }
-  std::cout<<std::endl;
+  //  std::cout<<"Output Ap\n";
+  //  for(int i=0;i<Ap.size();i++)
+  //   {
+  //     std::cout<<Ap[i]<<" ";
+  //   }
+  //  std::cout<<std::endl;
   
   
-  std::cout<<"This is the first p\n";
-  for(int i=0;i<p.size();i++)
-    {
-      std::cout<<p[i]<<" ";
-    }
-  std::cout<<std::endl;
-  std::cout<<"This is the first Ap\n";
-  for(int i=0;i<Ap.size();i++)
-    {
-      std::cout<<Ap[i]<<" ";
-    }
-  std::cout<<"\n";
   delta=inner_product(p,res)/inner_product(p,Ap);
-  std::cout<<"The first delta is !!!!!!::::::"<<delta<<"\n";
+  //std::cout<<"The first delta is !!!!!!::::::"<<delta<<"\n";
   // update vector x for the first iteration;
   for(int k=0;k<x.size();k++)
     {
       x[k]=x[k]+delta*p[k];
     }
-  std::cout<<"This is the first x!!!@@@@@@@@@@\n";
-  for(int i=0;i<x.size();i++)
-    {
-      std::cout<<x[i]<<" ";
-    }
-  std::cout<<"AAAAA\n\n";
 
   int iter=1;
   get_res(x,r);
-  std::cout<<"This is the initial res!!##@#@#@#!#!#\n";
-  for(int i=0;i<res.size();i++)
-    {
-      std::cout<<res[i]<<" "; 
-    }
-  std::cout<<std::endl;
+  // std::cout<<"This is the initial res!!##@#@#@#!#!#\n";
+  //for(int i=0;i<res.size();i++)
+     // {
+  //     std::cout<<res[i]<<" "; 
+  //  }
+  //std::cout<<std::endl;
   // in this iteration the extinction condition;
   // the max_norm can be replaced by frobenius_norm;
   while(iter<=max_iter&& max_norm(res)>tol)
@@ -319,7 +301,7 @@ void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double
 	{
 	  x[k]=x[k]+delta*p[k];
 	}
-     get_res(x,r);
+      get_res(x,r);
       iter++;
     }
  

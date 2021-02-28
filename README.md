@@ -1,3 +1,2 @@
-I have prove that the modified CG in TraceSolver works well;
-The next step is to check the M-modified Gram-Schmidt function.
-
+I have proved the TraceSolver for the basic example.
+The next step is to test the solver in the AFEPack

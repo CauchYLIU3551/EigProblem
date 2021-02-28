@@ -168,7 +168,7 @@ int main()
     }*/
 
   
-  C.mintrace(3,0.01,10);
+  C.mintrace(2,1.0e-5,20);
   std::cout<<"This is the eigenvalues of AX=lambda Mx;\n";
   for (int i=0;i<C.lambda.size();i++)
     {
@@ -176,7 +176,7 @@ int main()
     }
   std::cout<<"\n";
   
-      
+
 
       
   //std::vector<double> tempc(3,0);
@@ -269,11 +269,7 @@ test2=multiply(C.M,test2);
       std::cout<<std::endl;
     }
   */
-  std::vector<double> testvec(4,1);
-  multiply(a,testvec);
-  for(int i=0;i<testvec.size();i++)
-    { std::cout<<testvec[i]<<" ";}
-  std::cout<<"\n";
+ 
   std::cout<<"Hello world!\n";
   //  std::ofstream sparsematrix1 ("original_matrix.1");
   // A.print(sparsematrix1);

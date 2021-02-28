@@ -364,11 +364,17 @@ void TraceSolver::rand_V(int p, std::vector<std::vector<double>>& V)
   std::vector<std::vector<double>> tempV(A->m(), tmp);
   for (int i=0;i<p;i++)
     {
-      tempV[i][i]=sqrt(i+1)/(i+1);
+      //tempV[i][i]=sqrt(i+1)/(i+1);
+      tempV[i][i]=1;
     }
-  V=tempV;
-  X=V;
-  //std::cout<<"finish rand_V()\n";
+  //V=tempV;
+  //X=V;
+  X=tempV;
+  GS_M();
+  // std::cout<<"This is matrix initial matrix X after GS_M()\n";
+  //show_matrix(X);
+  V=X;
+
 };
 
 // Computing the matrix Vt * A *V;
@@ -433,8 +439,8 @@ void TraceSolver::GS_M()
 	}
     }
 
-  std::cout<<"This is the matrix X during the GS_M process\n";
-  show_matrix(X);
+  // std::cout<<"This is the matrix X during the GS_M process\n";
+  // show_matrix(X);
 
   for (int k=0;k<X.size();k++)
     {
@@ -572,10 +578,10 @@ void TraceSolver::Householder(std::vector<std::vector<double>> &a)
 void TraceSolver::QR(std::vector<std::vector<double>> &a,   std::vector<std::vector<double>>& Q)
 {
   int n=a.size();
-    std::cout<<"The matrix Qk before QR is ::::::::::!!!!!!!!!!!\n";
-  show_matrix(Q);
-    std::cout<<"The matrix a before QR is ::::::::::!!!!!!!!!!!\n";
-  show_matrix(a);
+  // std::cout<<"The matrix Qk before QR is ::::::::::!!!!!!!!!!!\n";
+  // show_matrix(Q);
+  //   std::cout<<"The matrix a before QR is ::::::::::!!!!!!!!!!!\n";
+  //  show_matrix(a);
 
   for (int i=0;i<a.size()-1;i++)
     {
@@ -605,10 +611,10 @@ void TraceSolver::QR(std::vector<std::vector<double>> &a,   std::vector<std::vec
 	}
       
     }
-  std::cout<<"The matrix Qk in QR is ::::::::::!!!!!!!!!!!\n";
-  show_matrix(Q);
-    std::cout<<"The matrix aQk in QR is ::::::::::!!!!!!!!!!!\n";
-  show_matrix(a);
+  // std::cout<<"The matrix Qk in QR is ::::::::::!!!!!!!!!!!\n";
+  // show_matrix(Q);
+  //   std::cout<<"The matrix aQk in QR is ::::::::::!!!!!!!!!!!\n";
+  // show_matrix(a);
   //multiply(X,Q); this update the X=V*Qk but in QR factorization, it does not contain this command;
   //multiply(a,Q); this update a=RQ, because after this QR function, a=R, after this command, a=RQ;
 }
@@ -630,15 +636,15 @@ void TraceSolver::QRSolver(std::vector<std::vector<double>> &a, double tol)
     }
 
   int num=0;
-  while (infi_Norm(b)>tol&&num<1)
+  while (infi_Norm(b)>tol&&num<100)
     {
       num++;
 
       b.clear();
 
       Householder(a);
-      	     std::cout<<"The matrix X after householder is :::::::::::::\n";
-	     show_matrix(X);
+      // std::cout<<"The matrix X after householder is :::::::::::::\n";
+      //    show_matrix(X);
       
       identitymatrix(Qk,n);
 
@@ -646,8 +652,8 @@ void TraceSolver::QRSolver(std::vector<std::vector<double>> &a, double tol)
      
       // Compute the num-th iteration, get the Qk in this step;
       multiply(X,Qk);
-      	     std::cout<<"The matrix X after QR is :::::::::::::\n";
-	     show_matrix(X);
+      //	     std::cout<<"The matrix X after QR is :::::::::::::\n";
+      //	     show_matrix(X);
       // compute R*Q beacuse I store the R(computed above) into A, So I directly use multiply
       // function to get A*Q into A=RQ.
       multiply(a,Qk);
@@ -658,6 +664,15 @@ void TraceSolver::QRSolver(std::vector<std::vector<double>> &a, double tol)
 	  b.push_back(a[i+1][i]);
 	}
     }
+  theta.clear();
+  theta.resize(a.size());
+  for(int i=0; i<a.size(); i++)
+    {
+      theta[i]=a[i][i];
+    }
+  /*
+  std::cout<<"This is the matrix a\n";
+  show_matrix(a);*/
 };
 
 void TraceSolver::get_MX()
@@ -678,18 +693,18 @@ void TraceSolver::get_MX()
 
 void TraceSolver::get_Px(std::vector<double> & x)
 {
-  std::cout<<"Entering get_Px()!!!!!!!!!!!!!!!!!!!!!!\n";
+  //std::cout<<"Entering get_Px()!!!!!!!!!!!!!!!!!!!!!!\n";
   std::vector<double>tempx(x), MXx;
-     std::cout<<"This x #!##!#!#!#!#!#!#\n";
-    show_vector(x);
+  // std::cout<<"This x #!##!#!#!#!#!#!#\n";
+  //  show_vector(x);
     //std::cout<<"This is MX\n";
 
   multiply(MX,tempx);
     //  std::cout<<"This is tempx times MX\n";
     //show_vector(tempx);
 // computing the (MX)t * (MX);
-    std::cout<<"This is matrix MX\n";
-    show_matrix(MX);
+  //  std::cout<<"This is matrix MX\n";
+  //  show_matrix(MX);
   std::vector<double> temp(MX.size());
   std::vector<std::vector<double>> MXtMX(MX.size(),temp);
   for (int i=0;i<MX.size();i++)
@@ -778,9 +793,29 @@ void TraceSolver::get_res(std::vector<double> x, std::vector<double> r)
   // std::cout<<"Finishing TraceSolver::get_res()\n";
 }
 
+// Computing the max error between AX and MXtheta;
 double TraceSolver::get_residual()
 {
-  double residual=1;
+  double residual=0,tempres;
+  std::vector<std::vector<double>> tempX(X);
+  transpose(tempX);
+  std::vector<double> tempAX,tempMXtheta;
+  
+  for(int i=0;i<tempX.size();i++)
+    {
+      tempAX=multiply(A,tempX[i]);
+      tempMXtheta=MX[i];
+      for(int j=0;j<MX[i].size();j++)
+	{
+	  //tempMXtheta[j]=tempMXtheta[j]*theta;
+	  if(residual<fabs(tempAX[j]-tempMXtheta[j]*theta[i]))
+	    {
+	      residual=fabs(tempAX[j]-tempMXtheta[j]*theta[i]);
+	    }
+	}
+      //tempMXtheta=multiply(M,)
+      //get_MX();
+    }
   return residual;
 }
 
@@ -791,23 +826,27 @@ double TraceSolver::get_residual()
 void TraceSolver::mintrace(int p, double tol, u_int max_iter)
 {
   std::vector<std::vector<double>> V(A->n());
+  std::vector<std::vector<double>> tempX;
+
   // using rand_V function to get the initial matrix V which is orthogonal corresponding with M;
   rand_V(p, V);// at this time it will send X = V; cause X=VU;
   //get_MX();
   int iter = 0;
   while(iter<max_iter)
     {
-      get_MX();
-      	     std::cout<<"The matrix X is :::::::::::::\n";
-	     show_matrix(X);
+      // get_MX();
+      // std::cout<<"The matrix X is :::::::::::::\n";
+      //  show_matrix(X);
       get_VtAV(V);
-      	     std::cout<<"The matrix X is :::::::::::::\n";
-	     show_matrix(X);
+      //    std::cout<<"The matrix X is :::::::::::::\n";
+      //    show_matrix(X);
       QRSolver(V);// return the diagonal entries of VtAV in theta and the V_k* U_k stored in X;
       //Householder(V);//this function will return the tridiagonal function in V and the Householder matrices stored in X;
       //QR(V);
-      	     std::cout<<"The matrix X is :::::::::::::\n";
-	     show_matrix(X);
+      //   std::cout<<"The matrix X is :::::::::::::\n";
+      //    show_matrix(X);
+      tempX=X;
+      get_MX();
       double residual=get_residual();
       if (residual<tol)
 	{
@@ -815,31 +854,31 @@ void TraceSolver::mintrace(int p, double tol, u_int max_iter)
 	}
       for (int i=0;i<p;i++)
 	{
-	     std::cout<<"The matrix X is :::::::::::::\n";
-	     show_matrix(X);
+	  // std::cout<<"The matrix X is :::::::::::::\n";
+	  //  show_matrix(X);
 	  std::vector<double> delta(A->m(),0), rhs(A->m(),0);// using a n x 1 dimension initial vector to compute the Conjugate gradient process.
 	  //computing rhs vector!!
 	  for(int j=0;j<rhs.size();j++)
 	    {
 	      rhs[j]=X[j][i];
 	    }
-	  std::cout<<"X*e::::::::::"<<i+1<<std::endl;
-	  show_vector(rhs);
+	  // std::cout<<"X*e::::::::::"<<i+1<<std::endl;
+	  //  show_vector(rhs);
 	  
 	  rhs=multiply(A, rhs);
-	     std::cout<<"This is A*X[i]\n";
-	      show_vector(rhs);
+	  //  std::cout<<"This is A*X[i]\n";
+	     //  show_vector(rhs);
 	  get_Px(rhs);
-	    std::cout<<"This is P*A*X[i]\n";
-	     show_vector(rhs);
+	  // std::cout<<"This is P*A*X[i]\n";
+	  // show_vector(rhs);
 	 
-	  std::cout<<"This is the initial vector delta for "<<i+1<<" test!!@#@!#@!#@!#@!#@!#!@#\n";
-	    show_vector(delta);
-	  solve(delta,rhs,1.0e-3,20);
-	  	  std::cout<<"flag1\n";
+	  //std::cout<<"This is the initial vector delta for "<<i+1<<" test!!@#@!#@!#@!#@!#@!#!@#\n";
+	  // show_vector(delta);
+	  solve(delta,rhs,1.0e-5,200);
+	  // std::cout<<"flag1\n";
 		  
-	  	  std::cout<<"This is the solution vector delta\n";
-	  show_vector(delta);
+	  //	  std::cout<<"This is the solution vector delta\n";
+	  //	  show_vector(delta);
 	  // using delta and X to compute V_k+1 stored in V and X, then do iteration
 	  // again;
 	  // G-S orthogonormalize function to make V_k+1 is ortho by M;
@@ -849,26 +888,32 @@ void TraceSolver::mintrace(int p, double tol, u_int max_iter)
 	    {
 	      X[k][i]=X[k][i]-delta[k];
 	    }
-	  std::cout<<"This is the "<<i<<" th test!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+	  // std::cout<<"This is the "<<i<<" th iteration\n";
 	}
-      std::cout<<"flag2\n";
+     
       //// std::cout<<"This is the X_k+1\n";
       ////  show_matrix(X);
       GS_M();
       //// std::cout<<"This is the matrix X after GS_M\n";
       //// show_matrix(X);
       V=X;
-      std::cout<<"The "<<iter+1<<" th iteration finished!!!!!!!!!!!!!!!!!\n";
+      // std::cout<<"The "<<iter+1<<" th iteration finished!!!!!!!!!!!!!!!!!\n";
       iter++;
     }
+  // std::cout<<"The final matrix X is :\n";
+  // show_matrix(tempX);
+  // std::cout<<"The final matrix V is :\n";
+  // show_matrix(V);
+  std::cout<<"After "<<iter<<" th iteration, the "<<p<<" smallest eigenvalues of the equation are stored in lambda member.\n";
   lambda.clear();
   lambda.resize(p);
-  transpose(X);
+  transpose(tempX);
+  //tempX=X;
   for(int i=0;i<p;i++)
     {
       std::vector<double> temp_AX;
-      temp_AX=multiply(A,X[i]);
-      lambda[i]=inner(X[i],temp_AX);
+      temp_AX=multiply(A,tempX[i]);
+      lambda[i]=inner(tempX[i],temp_AX);
     }
   
 }
