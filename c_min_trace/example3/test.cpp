@@ -168,7 +168,7 @@ int main()
     }*/
 
   
-  C.mintrace(2,1.0e-5,20);
+  C.mintrace(10,1.0e-5,20);
   std::cout<<"This is the eigenvalues of AX=lambda Mx;\n";
   for (int i=0;i<C.lambda.size();i++)
     {
