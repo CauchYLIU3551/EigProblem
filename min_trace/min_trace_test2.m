@@ -8,8 +8,8 @@
 % Output: the summand of the p eigenvalues;
 
 n=10;
-p=3;
-max_iter=10;
+p=7;
+max_iter=20;
 tol=10^-5;
 A=diag(2*ones(10,1));
 A=A+diag(ones(9,1),-1)+diag(ones(9,1),1);
