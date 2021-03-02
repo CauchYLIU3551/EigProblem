@@ -8,10 +8,10 @@
 4 # number of points #
 
 # Nodes which define the boundary #
-0:  0   0   .050   1
-1:  1   0   .050   1
-2:  1   1   .050   1
-3:  0   1   .050   1
+0:  0   0   .50   1
+1:  1   0   .50   1
+2:  1   1   .50   1
+3:  0   1   .50   1
 
 #===========
 | SEGMENTS |

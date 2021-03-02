@@ -22,23 +22,26 @@
 ## Author: root <root@AFEPack01>
 ## Created: 2021-01-21
 
-function x = CG (A, b, x0)
+function x = CG2 (A, b, x0)
   x=x0;
-  g=b-A*x;
-  p=-g;
+  r=b-A*x;
+  g=-r;
+  p=-r;
   test=A*p;
-  delta=p'*g/(p'*A*p)
+  delta=p'*r/(p'*A*p)
   x=x+delta*p;
-  g=b-A*x;
-  %num=1;
-  while norm(g)>10^-5%&num<200
+  r=b-A*x;
+  g=-r;
+  num=1;
+  while norm(g)>10^-2&&num<2000
     beta=g'*A*p/(p'*A*p);
     p=-g+beta*p;
-    delta=p'*g/(p'*A*p);
+    delta=p'*r/(p'*A*p);
     x=x+delta*p;
-    g=b-A*x;
-    %num=num+1;
+    r=b-A*x;
+    g=-r;
+    num=num+1;
    end
-   %num
+   num
 
 endfunction

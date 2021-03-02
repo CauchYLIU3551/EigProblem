@@ -3,6 +3,7 @@
 #include<lac/sparsity_pattern.h>
 //#include<AFEPack/AMGSolver.h>
 #include <trace/mintrace.h>
+#include <trace/Miscellaneous.h>
 /////////////////////////////////////////////
 // These functions can be gathered into one .cpp file after testing;
 
@@ -174,7 +175,7 @@ void multiply(std::vector<std::vector<double>> &A, std::vector<std::vector<doubl
         A = A0;
       }
 }
-
+/*
 // Multiplication of SparseMatrix A and vector x0;
 std::vector<double> multiply(const SparseMatrix<double>* A, std::vector<double> x0)
 {
@@ -203,6 +204,7 @@ std::vector<double> multiply(const SparseMatrix<double>* A, std::vector<double> 
       return x;
     }
 }
+*/
 
 // Computing matrix A times vector b, and using the A[0] to store the result and return it.
 void multiply(std::vector<std::vector<double>> A, std::vector<double> &b)
@@ -691,20 +693,65 @@ void TraceSolver::get_MX()
     }
 };
 
+
+int globaliter=0, global_i=0;
 void TraceSolver::get_Px(std::vector<double> & x)
 {
   //std::cout<<"Entering get_Px()!!!!!!!!!!!!!!!!!!!!!!\n";
-  std::vector<double>tempx(x), MXx;
+  std::vector<double>temp_x(x), MXx;
   // std::cout<<"This x #!##!#!#!#!#!#!#\n";
   //  show_vector(x);
     //std::cout<<"This is MX\n";
+  /*
+  if(globaliter==720&&global_i==1)
+    {
+      std::cout<<"The X is !!!!!!!!!!!!!!!\n";
+      show_matrix(X);
+      //get_MX();
 
-  multiply(MX,tempx);
+      std::vector<double> tempx2(M->n()),TempMx;
+      for(int k=0;k<M->m();k++)
+	{
+	  tempx2[k]=1;
+	  TempMx=multiply(M,tempx2);
+	  for(int q=0;q<TempMx.size();q++)
+	    {
+	      std::cout<<TempMx[q]<<" ";
+	    }
+	  std::cout<<std::endl;
+	  tempx2[k]=0;
+	}
+      std::cout<<"The MX is \n";
+      show_matrix(MX);
+      std::cout<<"The vector AXei is ::\n";
+      for(int i=0;i<x.size();i++)
+	{
+	  std::cout<<x[i]<<" ";
+	}
+      std::cout<<std::endl;
+    }
+  */
+  
+      
+  multiply(MX,temp_x);
+
+  /*
+  if(globaliter==720&&global_i==1)
+    {
+      std::cout<<"The vector (MX)' * AXei is :::::::::::::\n";
+      for(int i=0;i<tempx.size();i++)
+	{
+	  std::cout<<tempx[i]<<" ";
+	}
+      std::cout<<std::endl;
+      
+    }
     //  std::cout<<"This is tempx times MX\n";
     //show_vector(tempx);
 // computing the (MX)t * (MX);
   //  std::cout<<"This is matrix MX\n";
   //  show_matrix(MX);
+  */
   std::vector<double> temp(MX.size());
   std::vector<std::vector<double>> MXtMX(MX.size(),temp);
   for (int i=0;i<MX.size();i++)
@@ -721,23 +768,29 @@ void TraceSolver::get_Px(std::vector<double> & x)
     }
   //  std::cout<<"This is MXtMX\n";
   //show_matrix(MXtMX);
+  /*if(globaliter==720&&global_i==1)
+    {
+      std::cout<<"This is MXtMX\n";
+      show_matrix(MXtMX);
+      std::cout<<"\n";
+    }*/
 
   // solve the equation: (MXtMX)^-1 x = b, i.e. (MXtMX) b = x to get vector b;
-  std::vector<double> RHS(tempx);
-  tempx.clear();
-  tempx.resize(RHS.size(),0);
+  std::vector<double> RHS(temp_x);
+  temp_x.clear();
+  temp_x.resize(RHS.size(),0);
   // std::cout<<"This is tempx.resize()\n";
   //show_vector(tempx);
   // std::cout<<"This is vector RHS\n";
   //show_vector(RHS);
   double tol2=1.0e-5;
-  CG(MXtMX, tempx, RHS, tol2, tempx.size());
+  CG(MXtMX, temp_x, RHS, tol2, temp_x.size());
   for (int i=0;i<x.size();i++)
     {
       double sum=0;
       for(int j=0;j<MX.size();j++)
 	{
-	  sum+=MX[j][i]*tempx[j];
+	  sum+=MX[j][i]*temp_x[j];
 	}
       x[i]=x[i]-sum;
     }
@@ -770,27 +823,30 @@ void TraceSolver::get_Ap(std::vector<double> p)
 
 void TraceSolver::get_res(std::vector<double> x, std::vector<double> r)
 {
-  // std::cout<<"This is TraceSolver::get_res()\n";
+  //std::cout<<"This is TraceSolver::get_res()\n";
 
   res.reinit(x.size());
-  // std::cout<<"This is x\n";
+  //std::cout<<"This is x\n";
   // show_vector(x);
   std::vector<double> tempx(x);
-  get_Px(tempx);
+  //get_Px(tempx);
+  get_Px(x);
   // std::cout<<"This is Px\n";
-  // show_vector(tempx);
-  tempx=multiply(A,tempx);
+  //show_vector(tempx);
+  // show_vector(x);
+  tempx=multiply(A,x);
+  x=tempx;
   // std::cout<<"This is APx\n";
-  // show_vector(tempx);
-  get_Px(tempx);
+  // show_vector(x);
+  get_Px(x);
   // std::cout<<"This is PAPx\n";
-  // show_vector(tempx);
+  //  show_vector(x);
   for(int i=0;i<res.size();i++)
     {
-      res[i]=r[i]-tempx[i];
+      res[i]=r[i]-x[i];
     }
 
-  // std::cout<<"Finishing TraceSolver::get_res()\n";
+  //std::cout<<"Finishing TraceSolver::get_res()\n";
 }
 
 // Computing the max error between AX and MXtheta;
@@ -837,48 +893,154 @@ void TraceSolver::mintrace(int p, double tol, u_int max_iter)
       // get_MX();
       // std::cout<<"The matrix X is :::::::::::::\n";
       //  show_matrix(X);
+
+      /*
+      if(iter==720)
+	{
+	  //identitymatrix(X,A->m());
+	  std::cout<<"The matrix V before get_VtAV is :::::::::::::\n";
+	  show_matrix(V);
+	  }*/
       get_VtAV(V);
-      //    std::cout<<"The matrix X is :::::::::::::\n";
-      //    show_matrix(X);
+      /*
+      if(iter==720)
+	{
+	  std::cout<<"The matrix VAV is :::::::::::::\n";
+	  show_matrix(V);
+	  }*/
+      
       QRSolver(V);// return the diagonal entries of VtAV in theta and the V_k* U_k stored in X;
+      /*
+      if(iter==720)
+	{
+	  std::cout<<"The matrix VAV after QRSolver is :::::::::::::\n";
+	  show_matrix(V);
+	  std::cout<<"\n Meanwhile, the X is :::::::\n";
+	  show_matrix(X);
+	  }*/
       //Householder(V);//this function will return the tridiagonal function in V and the Householder matrices stored in X;
       //QR(V);
       //   std::cout<<"The matrix X is :::::::::::::\n";
       //    show_matrix(X);
       tempX=X;
       get_MX();
+
+      /*
+      if(iter==720)
+	{
+	  std::cout<<"The matrix MX is :::::::::::::\n";
+	  show_matrix(MX);
+	  }*/
+	    
       double residual=get_residual();
       if (residual<tol)
 	{
+	  //std::cout<<"The iter number is : "<<iter<<"\n";
+	  // std::cout<<"At this time MX is :\n";
+	  // show_matrix(MX);
+	  //std::cout<<"\n";
+	  //std::cout<<"The theta is :\n";
+	  //for(int i=0;i<theta.size();i++)
+	  //{
+	  //  std::cout<<theta[i]<<" ";
+	  // }
+	  /// std::cout<<"\n";
+	  std::cout<<"The distinction error is :\n"
+		   <<residual<<std::endl;
 	  break;
 	}
+
+      /*
+      if(iter==720)
+	{
+	  std::cout<<"The matrix X before CG solution process is :::::::::::::\n";
+	  show_matrix(X);
+	  }*/
+
+      ///////////////////
+      /////  globaliter=iter;
+      //////////////////
+      
       for (int i=0;i<p;i++)
 	{
 	  // std::cout<<"The matrix X is :::::::::::::\n";
 	  //  show_matrix(X);
+
+	  //
+	  ////// global_i=i+1;
+	  //
+	  
 	  std::vector<double> delta(A->m(),0), rhs(A->m(),0);// using a n x 1 dimension initial vector to compute the Conjugate gradient process.
 	  //computing rhs vector!!
 	  for(int j=0;j<rhs.size();j++)
 	    {
 	      rhs[j]=X[j][i];
 	    }
-	  // std::cout<<"X*e::::::::::"<<i+1<<std::endl;
-	  //  show_vector(rhs);
-	  
+	  /*
+	  if(iter==720)
+	    {
+	      std::cout<<"X*e::::::::::"<<i+1<<std::endl;
+	      //   show_vector(rhs);
+	      for(int i=0;i<rhs.size();i++)
+		{
+		  std::cout<<rhs[i]<<" ";
+		}
+	      std::cout<<std::endl;
+	    }*/
 	  rhs=multiply(A, rhs);
-	  //  std::cout<<"This is A*X[i]\n";
+	  //std::cout<<"This is A*X[i]\n";
+
+	  /*
+	  if(iter==720)
+	    {
+	      std::cout<<"AX*e::::::::::"<<i+1<<std::endl;
+	      //   show_vector(rhs);
+	      for(int i=0;i<rhs.size();i++)
+		{
+		  std::cout<<rhs[i]<<" ";
+		}
+	      std::cout<<std::endl;
+	      }*/
+		  
 	     //  show_vector(rhs);
 	  get_Px(rhs);
-	  // std::cout<<"This is P*A*X[i]\n";
-	  // show_vector(rhs);
-	 
-	  //std::cout<<"This is the initial vector delta for "<<i+1<<" test!!@#@!#@!#@!#@!#@!#!@#\n";
-	  // show_vector(delta);
-	  solve(delta,rhs,1.0e-5,200);
-	  // std::cout<<"flag1\n";
+
+	  ///
+	  /////////////global_i=0;
+	  ///
+	  
+	  //std::cout<<"This is P*A*X[i]\n";
+
+	  /*
+	  	  if(iter==720)
+	    {
+	      std::cout<<"PAX*e::::::::::"<<i+1<<std::endl;
+	      //   show_vector(rhs);
+	      for(int i=0;i<rhs.size();i++)
+		{
+		  std::cout<<rhs[i]<<" ";
+		}
+	      std::cout<<std::endl;
+	      }*/
 		  
-	  //	  std::cout<<"This is the solution vector delta\n";
-	  //	  show_vector(delta);
+	  // show_vector(rhs);
+
+		  /*	  
+	  if(iter==720)
+	    {
+	      std::cout<<"This is the initial vector delta for "<<i+1<<" test!!@#@!#@!#@!#@!#@!#!@#\n";
+	      show_vector(delta);
+	      }*/
+	  solve(delta,rhs,1.0e-2,A->m());
+	  // std::cout<<"flag1\n";
+
+	  /*
+	  if(iter == 720)	  
+	    {
+	      std::cout<<"This is the solution vector delta\n";
+	      show_vector(delta);
+	      std::cout<<"\n !!!\n";
+	      }*/
 	  // using delta and X to compute V_k+1 stored in V and X, then do iteration
 	  // again;
 	  // G-S orthogonormalize function to make V_k+1 is ortho by M;
@@ -891,14 +1053,35 @@ void TraceSolver::mintrace(int p, double tol, u_int max_iter)
 	  // std::cout<<"This is the "<<i<<" th iteration\n";
 	}
      
-      //// std::cout<<"This is the X_k+1\n";
+      ///  std::cout<<"This is the X_k+1\n";
       ////  show_matrix(X);
+
+
+      /*
+      if(iter==720)
+	{
+	  std::cout<<"The matrix X-delta is :::::::::::::\n";
+	  show_matrix(X);
+	  }
+      */
       GS_M();
-      //// std::cout<<"This is the matrix X after GS_M\n";
-      //// show_matrix(X);
+    /*
+      if(iter==720)
+	{
+	  std::cout<<"The matrix X after GS_M is :::::::::::::\n";
+	  show_matrix(X);
+	  }*/
+      /////std::cout<<"This is the matrix X after GS_M\n";
+      // show_matrix(X);
       V=X;
-      // std::cout<<"The "<<iter+1<<" th iteration finished!!!!!!!!!!!!!!!!!\n";
+      //std::cout<<"The "<<iter+1<<" th iteration finished!!!!!!!!!!!!!!!!!\n";
       iter++;
+      //if(iter==720)
+      //	{
+      //	  std::cout<<"Print the matrix V_k\n";
+      //  show_matrix(V);
+      //	}
+      
     }
   // std::cout<<"The final matrix X is :\n";
   // show_matrix(tempX);

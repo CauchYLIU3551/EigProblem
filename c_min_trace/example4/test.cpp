@@ -27,6 +27,7 @@
 #include <AFEPack/Geometry.h>
 
 #include <trace/mintrace.h>
+#include <trace/Miscellaneous.h>
 
 #define DIM 2
 #define PI (4.0*atan(1.0)) 
@@ -224,14 +225,81 @@ int main(int argc, char * argv[])
   solver.lazyReinit(mat);
   solver.solve(u_h, rhs, 1.0e-08, 50);*/
   TraceSolver solver(stiff_matrix, mass_matrix);
-  solver.mintrace(12, 1.0e-8, 2000);
+
+  /*
+  std::vector<double>rhs(stiff_matrix.m(),0),x(12,0);
+  rhs[0]=-0.107343;
+  rhs[1]=-0.107920;
+  rhs[2]=0.296721;
+  rhs[3]=0.136396;
+  rhs[4]=-1.038010;
+  rhs[5]=-0.456170;
+  rhs[6]=0.694243;
+  rhs[7]=1.047650;
+  rhs[8]=0.488934;
+  rhs[9]=0.065605;
+  rhs[10]=-0.113350;
+  rhs[11]=-0.309275;
+  std::vector<double> temp(6,0);
+  std::vector<std::vector<double>> tempX(12,temp);
+  solver.X=tempX;
+  for(int i=0;i<12;i++)
+    {
+      for(int j=0;j<6;j++)
+	{
+	  std::cin>>solver.X[i][j];
+	}
+    }
+  solver.get_MX();
+  solver.solve(x, rhs, 1.0e-3, 200);
+  std::cout<<"The rhs vector before CG is :\n";
+  for(int i=0;i<rhs.size();i++)
+    {
+      std::cout<<rhs[i]<<" ";
+    }
+  std::cout<<std::endl;
+  std::cout<<"The solution of CG\n";
+  for(int i=0;i<x.size();i++)
+    {
+      std::cout<<x[i]<<" ";
+    }
+  std::cout<<std::endl;
+  */
+  
+  /////////////////////////////
+  
+  solver.mintrace(6, 1.0e-3, 2000);
+
+  
   std::cout<<"This is the eigenvalues of AX=lambda Mx;\n";
   for (int i=0;i<solver.lambda.size();i++)
     {
       std::cout<<solver.lambda[i]<<std::endl;
     }
   std::cout<<"\n";
+
+  /*
+  std::vector<double> exact_eigen={2.0*PI*PI,PI*PI,PI*PI,0.0};
+  std::cout<<" The exact eigens are:\n";
+  for (int i=0;i<solver.lambda.size();i++)
+    {
+      std::cout<<fabs(solver.lambda[i]-exact_eigen[i])<<std::endl;
+      // std::cout<<exact_eigen[i]<<std::endl;
+    }
+  std::cout<<"\n";
   
+  std::cout<<"This is the matrix V after the whole process\n";
+  for(int i=0;i<solver.X.size();i++)
+    {
+      for(int j=0;j<solver.X[0].size();j++)
+	{
+	  std::cout<<solver.X[i][j]<<" ";
+	}
+      std::cout<<std::endl;
+      }*/
+  
+  
+  /*
   std::cout<<"Output the solution matrix X!\n";
   for(int i=0;i<solver.X.size();i++)
     {
@@ -242,7 +310,7 @@ int main(int argc, char * argv[])
       std::cout<<std::endl;
     }
   std::cout<<std::endl;
-
+  */
 
   /// 输出数据画图
   /* u_h.writeOpenDXData("u_h.dx");*/
@@ -253,11 +321,35 @@ int main(int argc, char * argv[])
     
   //std::cout << "\n\tt = " <<  t << std::endl;
 
-  std::ofstream sparsematrix2 ("stiff_matrix.1");
-  stiff_matrix.print(sparsematrix2);
-  std::ofstream sparsematrix  ("mass_matrix.1");
-  mass_matrix.print(sparsematrix);
- 
+  // std::ofstream sparsematrix2 ("stiff_matrix.1");
+  //stiff_matrix.print(sparsematrix2);
+  // std::ofstream sparsematrix  ("mass_matrix.1");
+  // mass_matrix.print(sparsematrix);
+
+  /*
+  std::cout<<"Attention! This is print out the columns of the matrix A and M\n";
+  std::vector<double> tempx(stiff_matrix.n(),0), tempAx, tempMx;
+
+  for(int i=0;i<solver.A->m();i++)
+    {
+      tempx[i]=1;
+      
+      tempAx=multiply(solver.A, tempx);
+      for(int j=0;j<tempAx.size();j++)
+	{
+	  std::cout<<tempAx[j]<<" ";
+	}
+	std::cout<<std::endl;
+      
+      tempMx=multiply(solver.M, tempx);
+      for(int j=0;j<tempMx.size();j++)
+	{
+	  std::cout<<tempMx[j]<<" ";
+	}
+      std::cout<<std::endl;
+      tempx[i]=0;
+    }*/
+  
   return 0;
 }
 
