@@ -61,8 +61,6 @@ void CGSolver::get_Ap(std::vector<double>x)
 // This is the function for Ap function for dealii::Vector
 void CGSolver::get_Ap(dealii::Vector<double>x)
 {
-  //Ap.clear();
-  //Ap.resize(x.size());
   Ap.reinit(x.size());
   if (A->n()!=Ap.size())
   {
@@ -70,10 +68,8 @@ void CGSolver::get_Ap(dealii::Vector<double>x)
   }
   else
   {
-    std::cout<<"This is CGSolver::get_Ap!!! \n";
     for(int k=0;k<A->m();k++)
       {
-	//	std::cout<<"this is the "<<k<<"th iterations \n";
 	dealii::SparseMatrix<double>::const_iterator i=A->begin(k);
 	Ap[k]=0;
         while(i!=A->end(k))
@@ -87,10 +83,6 @@ void CGSolver::get_Ap(dealii::Vector<double>x)
 
 void CGSolver::get_res(std::vector<double> x, std::vector<double> r)
 {
-  // if  res is std::vector, then following two commands are useful;
-  // res.clear();
-  //res.resize(x.size());
-  //std::cout<<"This is CGSolver::get_res()\n";
   res.reinit(x.size());
   for (int k=0;k<res.size();k++)
     {
@@ -108,9 +100,6 @@ void CGSolver::get_res(std::vector<double> x, std::vector<double> r)
 // This is get_res function for dealii::Vector
 void CGSolver::get_res(const dealii::Vector<double> x, const dealii::Vector<double> r)
 {
-  // res.clear();
-  //res.resize(x.size());
-
   res.reinit(x.size());
   
   for (int k=0;k<res.size();k++)
@@ -206,89 +195,39 @@ double max_norm(dealii::Vector<double> x)
 
 void CGSolver::solve(std::vector<double>& x, const std::vector<double> r, double tol, int max_iter)
 {
-  //std::cout<<" This is CGSolver for std!!!!\n";
- 
   Assert(is_initialized == true, ExcNotInitialized());
   if(tol==0.0)tol=toler;
 
-  /*
-   std::cout<<"Begin to initialize the vector!\n";
-   std::cout<<"The vector x is \n";
-    for(int i=0;i<x.size();i++)
-     {
-       std::cout<<x[i]<<" ";
-      }
-   std::cout<<std::endl;
-   std::cout<<"The vector rhs is \n";
-    for (int i=0;i<r.size();i++)
-     {
-       std::cout<<r[i]<<" ";
-     }
-    std::cout<<std::endl;*/
   get_res(x,r);
-  /*
-    std::cout<<"print the vector res!!\n";
-    for(int i=0;i<res.size();i++)
-     {
-       std::cout<<res[i]<<" ";
-      }
-      std::cout<<std::endl;*/
-    // p0=-g;
-  // std::cout<<"Get the get_Ap()\n";
+
   std::vector<double> temp_res(res.size());
   for(int i=0;i<res.size();i++)
     {
       temp_res[i]=res[i];
     }
   get_Ap(temp_res);
-
-  //  std::cout<<"Finish initialization!!!!!\n";
-
- 
   
   double beta=0;
   double delta=0;
-  //beta=inner_product(res,Ap)/inner_product(res,Ap);
-  //beta=-beta;
+
   std::vector<double> p(x.size(),0);
   for(int k=0;k<p.size();k++)
     {
       p[k]=-res[k];
     }
-  //std::cout<<"Attention::::: This is vector p!!!!\n";
+
   get_Ap(p);
-  /* std::cout<<"Output Ap\n";
-   for(int i=0;i<Ap.size();i++)
-    {
-      std::cout<<Ap[i]<<" ";
-     }
-     std::cout<<std::endl;*/
-  
   
   delta=inner_product(p,res)/inner_product(p,Ap);
-  //std::cout<<"The first delta is !!!!!!::::::"<<delta<<"\n";
   // update vector x for the first iteration;
   for(int k=0;k<x.size();k++)
     {
       x[k]=x[k]+delta*p[k];
     }
-  /*
-  std::cout<<"This is the updated vector x;\n";
-  for(int i=0;i<x.size();i++)
-    {
-      std::cout<<x[i]<<" ";
-    }
-    std::cout<<std::endl;*/
   
   int iter=1;
   get_res(x,r);
-  /*
-   std::cout<<"This is the initial res!!##@#@#@#!#!#\n";
-  for(int i=0;i<res.size();i++)
-      {
-       std::cout<<res[i]<<" "; 
-    }
-    std::cout<<std::endl;*/
+
   // in this iteration the extinction condition;
   // the max_norm can be replaced by frobenius_norm;
   while(iter<=max_iter&& max_norm(res)>tol)
