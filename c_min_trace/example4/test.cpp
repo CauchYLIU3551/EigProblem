@@ -268,7 +268,7 @@ int main(int argc, char * argv[])
   
   /////////////////////////////
   
-  solver.mintrace(6, 1.0e-3, 2000);
+  solver.mintrace(12, 1.0e-5, 2000);
 
   
   std::cout<<"This is the eigenvalues of AX=lambda Mx;\n";
